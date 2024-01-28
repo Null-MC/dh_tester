@@ -19,6 +19,7 @@ uniform float viewWidth;
 uniform float viewHeight;
 uniform float near;
 uniform float far;
+uniform float farPlane;
 
 #if defined SHADOW_FRUSTUM_FIT && defined SHADOWS_ENABLED
     uniform float aspectRatio;
@@ -50,50 +51,39 @@ void main() {
 
     #if DEBUG_VIEW == DEBUG_VIEW_VIEW_POS
         float depth = texelFetch(depthtex0, uv, 0).r;
+        float depthL = linearizeDepth(depth, near, farPlane);
         vec4 viewPos = vec4(0.0);
 
-        if (depth < 1.0) {
-            vec4 ndcPos = vec4(texcoord, depth, 1.0) * 2.0 - 1.0;
-            viewPos = gbufferProjectionInverse * ndcPos;
-            viewPos.xyz /= viewPos.w;
+        float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+        float dhDepthL = linearizeDepth(depth, dhNearPlane, dhFarPlane);
+
+        mat4 projectionInv = gbufferProjectionInverse;
+        if (depth >= 1.0 || dhDepthL < depthL) {
+            projectionInv = dhProjectionInverse;
+            depth = dhDepth;
+            // depthL = dhDepthL;
         }
-        else {
-            depth = texelFetch(dhDepthTex, ivec2(gl_FragCoord.xy), 0).r;
-            
-            vec4 ndcPos = vec4(texcoord, depth, 1.0) * 2.0 - 1.0;
-            viewPos = dhProjectionInverse * ndcPos;
-            viewPos.xyz /= viewPos.w;
-        }
+
+        vec4 ndcPos = vec4(texcoord, depth, 1.0) * 2.0 - 1.0;
+        viewPos = projectionInv * ndcPos;
+        viewPos /= viewPos.w;
 
         gl_FragColor = vec4(viewPos.xyz * 0.001, 1.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #elif DEBUG_VIEW == DEBUG_VIEW_DEPTH_LINEAR
         float depth = texelFetch(depthtex0, uv, 0).r;
+        float depthL = linearizeDepth(depth, near, farPlane);
         
-        mat4 projectionInv = gbufferProjectionInverse;
-        float _near = near;
-        float _far = far * 4.0;
-        if (depth >= 1.0) {
-            depth = texelFetch(dhDepthTex, uv, 0).r;
-            projectionInv = dhProjectionInverse;
-            _near = dhNearPlane;
-            _far = dhFarPlane;
+        float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+        float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
+
+        if (depth >= 1.0 || dhDepthL < depthL) {
+            // depth = dhDepth;
+            depthL = dhDepthL;
         }
 
-        vec4 viewPos = vec4(0.0);
-        if (gl_FragCoord.x/viewWidth < 0.5) {
-            depth = linearizeDepth(depth, _near, _far);// / (0.5*dhFarPlane);
-        }
-        else {
-            vec4 ndcPos = vec4(texcoord, depth, 1.0) * 2.0 - 1.0;
-            viewPos = projectionInv * ndcPos;
-            viewPos.xyz /= viewPos.w;
-
-            depth = -viewPos.z;
-        }
-
-        depth /= 0.5*dhFarPlane;
-        gl_FragColor = vec4(vec3(depth), 1.0);
+        depthL /= 0.5*dhFarPlane;
+        gl_FragColor = vec4(vec3(depthL), 1.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #elif DEBUG_VIEW == DEBUG_VIEW_SHADOWS
         gl_FragColor = texture(shadowcolor0, texcoord);

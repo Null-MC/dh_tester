@@ -1,0 +1,27 @@
+option.DEBUG_VIEW=Debug View
+value.DEBUG_VIEW.0=None
+value.DEBUG_VIEW.1=World Normal
+value.DEBUG_VIEW.2=View-Space Position
+value.DEBUG_VIEW.3=Linear Depth
+value.DEBUG_VIEW.4=Block ID
+value.DEBUG_VIEW.5=Shadow Color
+
+option.DH_CLIP_DIST=Clip Distance
+option.DH_CLIP_DIST.comment=The distance from the camera that regular chunks will be culled away and DH chunks will begin.
+suffix.DH_CLIP_DIST=%
+
+
+screen.SHADOWS=Shadows
+
+option.SHADOWS_ENABLED=Enabled
+
+option.shadowMapResolution=Resolution
+
+option.SHADOW_DIST=Distance
+
+option.SHADOW_DISTORTION=Distortion
+suffix.SHADOW_DISTORTION=%
+
+option.SHADOW_NORMAL_BIAS=Normal-Offset Bias
+
+option.SHADOW_FRUSTUM_FIT=Fit to Frustum

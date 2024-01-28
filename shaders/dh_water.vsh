@@ -52,7 +52,8 @@ void main() {
     vPos.xyz = floor(vPos.xyz + cameraOffset + 0.5) - cameraOffset;
 
     // Move down to match vanilla
-    vPos.y -= (1.8/16.0);
+    bool isWater = (materialId == DH_BLOCK_WATER);
+    if (isWater) vPos.y -= (1.8/16.0);
 
     vec4 viewPos = gl_ModelViewMatrix * vPos;
     localPos = gbufferModelViewInverse * viewPos;

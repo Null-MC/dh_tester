@@ -59,7 +59,7 @@ void main() {
     vec3 cameraOffset = fract(cameraPosition);
     vPos.xyz = floor(vPos.xyz + cameraOffset + 0.5) - cameraOffset;
 
-    vec4 viewPos = gl_ModelViewMatrix * gl_Vertex;
+    vec4 viewPos = gl_ModelViewMatrix * vPos;
     localPos = gbufferModelViewInverse * viewPos;
     gl_Position = dhProjection * viewPos;
 

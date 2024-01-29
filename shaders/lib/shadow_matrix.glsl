@@ -43,9 +43,9 @@ void GetFrustumShadowBounds(out vec3 boundsMin, out vec3 boundsMax) {
 
     boundsMin -= ShadowFrustumPadding;
     boundsMax += ShadowFrustumPadding;
-
-    boundsMin.z = -shadowDistance;
-    boundsMax.z =  shadowDistance;
+    
+    boundsMin.z = -dhFarPlane;
+    boundsMax.z = +dhFarPlane;
 
     boundsMin = floor(boundsMin / shadowIntervalSize) * shadowIntervalSize;
     boundsMax = ceil(boundsMax / shadowIntervalSize) * shadowIntervalSize;

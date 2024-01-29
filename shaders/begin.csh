@@ -31,9 +31,6 @@ void main() {
         shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
         // shadowProjectionFitInverse = inverse(shadowProjectionFit);
 
-        // boundsMin.z -= 100.0;
-        // boundsMax.z -= 100.0;
-
         shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
 
         shadowViewCenter = 0.5 * (boundsMin + boundsMax);

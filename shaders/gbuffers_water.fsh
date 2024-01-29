@@ -29,6 +29,10 @@ uniform vec3 fogColor;
 uniform float viewWidth;
 uniform float far;
 
+#if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
+    uniform mat4 gbufferModelViewInverse;
+#endif
+
 #include "/lib/sun.glsl"
 
 
@@ -42,30 +46,37 @@ void main() {
 
     gl_FragColor = texture(gtexture, texcoord) * gcolor;
 
-    vec3 sunDir = GetSunVector();
-    vec3 lightDir = sunDir * sign(sunDir.y);
-    vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
     vec3 _viewNormal = normalize(viewNormal);
 
-    float shadowF = 1.0;
-    #ifdef SHADOWS_ENABLED
-        if (clamp(shadowPos, vec3(0.0), vec3(1.0)) == shadowPos)
-            shadowF = texture(shadowtex1, shadowPos);
+    #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
+        vec3 worldNormal = mat3(gbufferModelViewInverse) * _viewNormal;
+        gl_FragColor.rgb = normalize(worldNormal) * 0.5 + 0.5;
+        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    #else
+        vec3 sunDir = GetSunVector();
+        vec3 lightDir = sunDir * sign(sunDir.y);
+        vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
+
+        float shadowF = 1.0;
+        #ifdef SHADOWS_ENABLED
+            if (clamp(shadowPos, vec3(0.0), vec3(1.0)) == shadowPos)
+                shadowF = texture(shadowtex1, shadowPos);
+        #endif
+
+        vec2 _lm = (lmcoord - (0.5/16.0)) / (15.0/16.0);
+        float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
+        float lit = pow(NdotL, 0.5) * shadowF;
+        _lm.y *= lit * 0.5 + 0.5;
+
+        vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
+        vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
+        gl_FragColor.rgb *= blockSkyLight;
+
+        vec3 reflectDir = reflect(viewDir, _viewNormal);
+        float specularF = pow(max(dot(reflectDir, lightViewDir), 0.0), 32);
+        gl_FragColor.rgb += gcolor.a * specularF * shadowF;
+
+        float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
     #endif
-
-    vec2 _lm = (lmcoord - (0.5/16.0)) / (15.0/16.0);
-    float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
-    float lit = pow(NdotL, 0.5) * shadowF;
-    _lm.y *= lit * 0.5 + 0.5;
-
-    vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-    vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-    gl_FragColor.rgb *= blockSkyLight;
-
-    vec3 reflectDir = reflect(viewDir, _viewNormal);
-    float specularF = pow(max(dot(reflectDir, lightViewDir), 0.0), 32);
-    gl_FragColor.rgb += gcolor.a * specularF * shadowF;
-
-    float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
 }

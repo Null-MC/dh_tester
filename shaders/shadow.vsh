@@ -3,8 +3,14 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
+in vec2 mc_Entity;
+
 varying vec2 texcoord;
+varying vec3 localPos;
 varying vec4 gcolor;
+flat varying uint blockId;
+
+uniform mat4 shadowModelViewInverse;
 
 #if defined SHADOW_FRUSTUM_FIT && !defined IRIS_FEATURE_SSBO
     uniform mat4 gbufferModelViewInverse;
@@ -26,6 +32,9 @@ varying vec4 gcolor;
 
 
 void main() {
+    vec4 shadowViewPos = gl_ModelViewMatrix * gl_Vertex;
+    localPos = (shadowModelViewInverse * shadowViewPos).xyz;
+
     #ifdef SHADOW_FRUSTUM_FIT
         #ifndef IRIS_FEATURE_SSBO
             vec3 boundsMin, boundsMax;
@@ -33,10 +42,9 @@ void main() {
             mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
         #endif
 
-        gl_Position = gl_ModelViewMatrix * gl_Vertex;
-        gl_Position = shadowProjectionFit * gl_Position;
+        gl_Position = shadowProjectionFit * shadowViewPos;
     #else
-        gl_Position = ftransform();
+        gl_Position = shadowProjection * shadowViewPos;
     #endif
     
     #if SHADOW_DISTORTION > 0
@@ -52,5 +60,6 @@ void main() {
     #endif
 
     texcoord  = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+    blockId = uint(mc_Entity.x);
     gcolor = gl_Color;
 }

@@ -33,6 +33,8 @@ uniform float far;
 
 void main() {
     float viewDist = length(localPos.xyz);
+
+    // Distane-clip DH terrain  when it is closer than threshold
     if (viewDist < dh_clipDistF * far) {discard; return;}
 
     vec3 _viewNormal = normalize(viewNormal);
@@ -45,7 +47,6 @@ void main() {
         gl_FragColor = gcolor;
 
         // Fake Texture Noise
-        // float viewDist = length(localPos.xyz);
         vec3 worldPos = localPos.xyz + cameraPosition;
         applyNoise(gl_FragColor, worldPos, viewDist);
 
@@ -55,7 +56,6 @@ void main() {
         vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
 
         vec2 _lm = (lmcoord - (0.5/16.0)) / (15.0/16.0);
-        // vec3 viewNormal = mat3(gbufferModelView) * normal;
         float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
         float lit = pow(NdotL, 0.5);
 
@@ -64,6 +64,7 @@ void main() {
                 lit *= texture(shadowtex0, shadowPos);
         #endif
 
+        // Keep 50% of sk-light as ambient lighting
         _lm.y *= lit * 0.5 + 0.5;
 
         // LightMap Lighting

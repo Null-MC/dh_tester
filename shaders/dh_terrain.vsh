@@ -38,14 +38,10 @@ uniform vec3 cameraPosition;
     #include "/lib/shadow_distortion.glsl"
 #endif
 
-
 #if DEBUG_VIEW == DEBUG_VIEW_BLOCK_ID
-    vec3 HsvToRgb(const in vec3 c) {
-        const vec4 K = vec4(1.0, 2.0 / 3.0, 1.0 / 3.0, 3.0);
-        vec3 p = abs(fract(c.xxx + K.xyz) * 6.0 - K.www);
-        return c.z * mix(K.xxx, clamp(p - K.xxx, 0.0, 1.0), c.y);
-    }
+    #include "/lib/hsv.glsl"
 #endif
+
 
 void main() {
     viewNormal = mat3(gbufferModelView) * gl_Normal;
@@ -97,14 +93,10 @@ void main() {
     #endif
 
     #if DEBUG_VIEW == DEBUG_VIEW_BLOCK_ID
-        uint matId = uint(dhMaterialId);
-
         vec3 hsv = vec3(1.0);
-        hsv.x = matId / 15.0;
+        hsv.x = dhMaterialId / 15.0;
 
         vec3 color = HsvToRgb(hsv);
-        color = pow(color, vec3(1.0/2.2));
-
-        gcolor = vec4(color, 1.0);
+        gcolor.rgb = linear_to_srgb(color);
     #endif
 }

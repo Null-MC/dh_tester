@@ -12,12 +12,16 @@ flat varying uint blockId;
 
 uniform mat4 shadowModelViewInverse;
 
-#if defined SHADOW_FRUSTUM_FIT && !defined IRIS_FEATURE_SSBO
-    uniform mat4 gbufferModelViewInverse;
-    uniform mat4 gbufferProjection;
-    uniform mat4 shadowModelView;
-    uniform float dhFarPlane;
-    uniform float near;
+#ifdef SHADOW_FRUSTUM_FIT
+    #ifndef IRIS_FEATURE_SSBO
+        uniform mat4 gbufferModelViewInverse;
+        uniform mat4 gbufferProjection;
+        uniform mat4 shadowModelView;
+        uniform float dhFarPlane;
+        uniform float near;
+    #endif
+#else
+    uniform mat4 shadowProjection;
 #endif
 
 #ifdef SHADOW_FRUSTUM_FIT

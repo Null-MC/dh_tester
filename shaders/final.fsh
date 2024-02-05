@@ -68,6 +68,7 @@ void main() {
         vec4 ndcPos = vec4(texcoord, depth, 1.0) * 2.0 - 1.0;
         viewPos = projectionInv * ndcPos;
         viewPos /= viewPos.w;
+        // viewPos.xyz = abs(viewPos.xyz / viewPos.w);
 
         gl_FragColor = vec4(viewPos.xyz * 0.001, 1.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
@@ -78,7 +79,7 @@ void main() {
         float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
         float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
-        if (depth >= 1.0 || dhDepthL < depthL) {
+        if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
             // depth = dhDepth;
             depthL = dhDepthL;
         }

@@ -32,20 +32,22 @@ uniform float far;
 
 
 void main() {
-    float viewDist = length(localPos.xyz);
+    gl_FragColor = gcolor;
 
     // Distane-clip DH terrain  when it is closer than threshold
+    float viewDist = length(localPos.xyz);
     if (viewDist < dh_clipDistF * far) {discard; return;}
 
     vec3 _viewNormal = normalize(viewNormal);
     
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
         vec3 localNormal = mat3(gbufferModelViewInverse) * _viewNormal;
-        gl_FragColor = vec4(normalize(localNormal) * 0.5 + 0.5, 1.0);
+        gl_FragColor.rgb = normalize(localNormal) * 0.5 + 0.5;
+        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
+        gl_FragColor.rgb = vec3(lmcoord, 0.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #else
-        gl_FragColor = gcolor;
-
         // Fake Texture Noise
         vec3 worldPos = localPos.xyz + cameraPosition;
         applyNoise(gl_FragColor, worldPos, viewDist);

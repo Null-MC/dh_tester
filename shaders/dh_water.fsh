@@ -52,7 +52,10 @@ void main() {
 
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
         vec3 localNormal = mat3(gbufferModelViewInverse) * _viewNormal;
-        gl_FragColor = vec4(normalize(localNormal) * 0.5 + 0.5, 1.0);
+        gl_FragColor.rgb = normalize(localNormal) * 0.5 + 0.5;
+        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
+        gl_FragColor.rgb = vec3(lmcoord, 0.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #else
         bool isWater = (materialId == DH_BLOCK_WATER);

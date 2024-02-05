@@ -42,6 +42,9 @@ void main() {
         vec3 worldNormal = mat3(gbufferModelViewInverse) * _viewNormal;
         gl_FragColor.rgb = normalize(worldNormal) * 0.5 + 0.5;
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
+        gl_FragColor.rgb = vec3(lmcoord, 0.0);
+        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #else
         vec3 sunDir = GetSunVector();
         vec3 lightDir = sunDir * sign(sunDir.y);

@@ -13,6 +13,7 @@ uniform sampler2D gtexture;
 uniform float far;
 
 
+/* RENDERTARGETS: 0 */
 void main() {
     bool isWater = (blockId == BLOCK_WATER);
 

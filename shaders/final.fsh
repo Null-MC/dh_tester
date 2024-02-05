@@ -44,6 +44,7 @@ uniform float farPlane;
 #endif
 
 
+/* RENDERTARGETS: 0 */
 void main() {
     ivec2 uv = ivec2(gl_FragCoord.xy);
     vec2 viewSize = vec2(viewWidth, viewHeight);
@@ -55,10 +56,10 @@ void main() {
         vec4 viewPos = vec4(0.0);
 
         float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
-        float dhDepthL = linearizeDepth(depth, dhNearPlane, dhFarPlane);
+        float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
         mat4 projectionInv = gbufferProjectionInverse;
-        if (depth >= 1.0 || dhDepthL < depthL) {
+        if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
             projectionInv = dhProjectionInverse;
             depth = dhDepth;
             // depthL = dhDepthL;

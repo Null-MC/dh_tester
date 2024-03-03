@@ -9,6 +9,8 @@
 #define SHADOW_DIST 200 // [50 100 150 200 250 300 400 500 600 800 1000 1500 2000 2500 3000 3500 4000]
 #define SHADOW_FRUSTUM_FIT
 
+const float shadowNearPlane = -1.0;
+const float shadowFarPlane = -1.0;
 const float dh_clipDistF = DH_CLIP_DIST * 0.01;
 const float dh_waterClipDist = 0.8;
 

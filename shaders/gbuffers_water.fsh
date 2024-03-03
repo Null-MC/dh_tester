@@ -42,9 +42,24 @@ void main() {
     float viewDist = length(viewPos.xyz);
     vec3 viewDir = viewPos.xyz / viewDist;
 
-    if (viewDist > dh_clipDistF * far) {discard; return;}
+    #ifdef DISTANT_HORIZONS
+        float farTrans = dh_clipDistF * far;
+        if (viewDist > dh_clipDistF * far) {discard; return;}
 
-    gl_FragColor = texture(gtexture, texcoord) * gcolor;
+        mat2 dFdXY = mat2(dFdx(texcoord), dFdy(texcoord));
+        float md = max(dot(dFdXY[0], dFdXY[0]), dot(dFdXY[1], dFdXY[1]));
+        float lodGrad = 0.5 * log2(md);
+
+        float lodMinF = smoothstep(0.5 * farTrans, farTrans, viewDist);
+        float lodFinal = max(lodGrad, 4.0 * lodMinF);
+
+        gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
+        gl_FragColor.a   = textureLod(gtexture, texcoord, lodGrad).a;
+    #else
+        gl_FragColor = texture(gtexture, texcoord);
+    #endif
+
+    gl_FragColor *= gcolor;
 
     vec3 _viewNormal = normalize(viewNormal);
 

@@ -36,7 +36,21 @@ void main() {
 
     vec3 _viewNormal = normalize(viewNormal);
 
-    gl_FragColor = texture(gtexture, texcoord) * gcolor;
+    #ifdef DISTANT_HORIZONS
+        mat2 dFdXY = mat2(dFdx(texcoord), dFdy(texcoord));
+        float md = max(dot(dFdXY[0], dFdXY[0]), dot(dFdXY[1], dFdXY[1]));
+        float lodGrad = 0.5 * log2(md);
+
+        float lodMinF = smoothstep(0.6 * far, 0.9 * far, viewDist);
+        float lodFinal = max(lodGrad, 4.0 * lodMinF);
+
+        gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
+        gl_FragColor.a   = textureLod(gtexture, texcoord, lodGrad).a;
+    #else
+        gl_FragColor = texture(gtexture, texcoord);
+    #endif
+
+    gl_FragColor *= gcolor;
 
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
         vec3 worldNormal = mat3(gbufferModelViewInverse) * _viewNormal;

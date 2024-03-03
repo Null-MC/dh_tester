@@ -47,6 +47,7 @@ void main() {
     #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
         gl_FragColor.rgb = vec3(lmcoord, 0.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    // #elif DEBUG_VIEW != DEBUG_VIEW_BLOCK_ID
     #else
         // Fake Texture Noise
         vec3 worldPos = localPos.xyz + cameraPosition;

@@ -7,6 +7,7 @@
 #define DEBUG_VIEW_SHADOWS 6
 
 #define BLOCK_WATER 10u
+#define BLOCK_PLANT 11u
 
 #define DH_MATERIAL_LEAVES 1u
 #define DH_MATERIAL_STONE 2u

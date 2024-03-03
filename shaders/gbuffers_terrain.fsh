@@ -3,6 +3,8 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
+flat in uint blockId;
+
 varying vec3 localPos;
 varying vec4 gcolor;
 varying vec2 texcoord;
@@ -49,8 +51,12 @@ void main() {
         float lodMinF = smoothstep(0.7 * far, far, viewDist);
         float lodFinal = max(lodGrad, 4.0 * lodMinF);
 
-        gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
-        gl_FragColor.a   = textureLod(gtexture, texcoord, lodGrad).a;
+        gl_FragColor = textureLod(gtexture, texcoord, lodFinal);
+        // gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
+
+        if (blockId == BLOCK_PLANT) {
+            gl_FragColor.a = textureLod(gtexture, texcoord, lodGrad).a;
+        }
 
         #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
             // Fake Texture Noise

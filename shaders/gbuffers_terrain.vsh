@@ -5,6 +5,8 @@
 
 in vec3 mc_Entity;
 
+flat out uint blockId;
+
 varying vec3 localPos;
 varying vec4 gcolor;
 varying vec2 texcoord;
@@ -47,9 +49,9 @@ void main() {
 
     localPos = mul3(gbufferModelViewInverse, viewPos);
 
-    uint blockId = uint(mc_Entity.x + 0.5);
+    blockId = uint(mc_Entity.x + 0.5);
 
-    if (blockId == 11u) {
+    if (blockId == BLOCK_PLANT) {
         viewNormal = mat3(gbufferModelView) * vec3(0.0, 1.0, 0.0);
     }
 

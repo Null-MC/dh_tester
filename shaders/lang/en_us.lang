@@ -32,3 +32,10 @@ suffix.SHADOW_DISTORTION=%
 option.SHADOW_NORMAL_BIAS=Normal-Offset Bias
 
 option.SHADOW_FRUSTUM_FIT=Fit to Frustum
+
+
+screen.SSAO=SSAO
+
+option.SSAO_ENABLED=Enabled
+
+option.SSAO_BLUR_RADIUS=Blur Radius

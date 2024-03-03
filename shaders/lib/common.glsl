@@ -22,6 +22,13 @@
 #define DH_MATERIAL_EMISSIVE 15u
 
 
+const float EPSILON = 1.e-6;
+const float PI = 3.1415926538;
+const float TAU = PI * 2.0;
+
+
+#define saturate(x) (clamp((x), 0.0, 1.0))
+
 #define linear_to_srgb(x) (pow(x, vec3(1.0/2.2)))
 
 float maxOf(const in vec2 vec) {return max(vec[0], vec[1]);}
@@ -42,4 +49,7 @@ vec3 mul3(const in mat4 matrix, const in vec3 vector) {
 #endif
 
 #ifdef DH_LOD_FADE
+#endif
+
+#ifdef SSAO_ENABLED
 #endif

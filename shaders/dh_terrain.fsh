@@ -80,8 +80,10 @@ void main() {
         vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
         gl_FragColor.rgb *= blockSkyLight;
 
-        // Fog
-        float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
+        #ifndef SSAO_ENABLED
+            // Fog
+            float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+            gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
+        #endif
     #endif
 }

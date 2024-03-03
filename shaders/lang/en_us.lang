@@ -7,7 +7,13 @@ value.DEBUG_VIEW.4=Linear Depth
 value.DEBUG_VIEW.5=Block ID
 value.DEBUG_VIEW.6=Shadow Color
 
-option.DH_CLIP_DIST=Clip Distance
+option.DH_TEX_NOISE=DH Texture Noise
+option.DH_TEX_NOISE.comment=Adds noise to the DH chunks to make them appear textured/less flat.
+
+option.DH_LOD_FADE=Mip Fading
+option.DH_LOD_FADE.comment=Uses texture mipmaps to fade-out the textures of regular chunks into LOD chunks.
+
+option.DH_CLIP_DIST=DH Clip Distance
 option.DH_CLIP_DIST.comment=The distance from the camera that regular chunks will be culled away and DH chunks will begin.
 suffix.DH_CLIP_DIST=%
 

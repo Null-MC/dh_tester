@@ -21,6 +21,7 @@ uniform sampler2D lightmap;
 #endif
 
 uniform mat4 gbufferModelView;
+uniform vec3 cameraPosition;
 uniform float dhNearPlane;
 uniform float dhFarPlane;
 uniform int worldTime;
@@ -34,6 +35,7 @@ uniform float farPlane;
 #endif
 
 #include "/lib/sun.glsl"
+#include "/lib/tex_noise.glsl"
 
 
 void main() {
@@ -59,6 +61,12 @@ void main() {
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     #else
         bool isWater = (materialId == DH_BLOCK_WATER);
+
+        #ifdef DH_TEX_NOISE
+            // Fake Texture Noise
+            vec3 worldPos = localPos.xyz + cameraPosition;
+            applyNoise(gl_FragColor, worldPos, viewDist);
+        #endif
 
         vec3 sunDir = GetSunVector();
         vec3 lightDir = sunDir * sign(sunDir.y);

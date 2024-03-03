@@ -1,5 +1,7 @@
 #define DEBUG_VIEW 0 // [0 1 2 3 4 5 6]
 #define DH_CLIP_DIST 80 // [0 10 20 30 40 50 60 70 80 90 100]
+#define DH_TEX_NOISE
+#define DH_LOD_FADE
 #define SHADOWS_ENABLED
 #define WATER_CLIP
 
@@ -20,3 +22,7 @@ const float shadowDistance = SHADOW_DIST;
 const int shadowMapResolution = 2048; // [1024 2048 4096 8192]
 const float shadowDistanceRenderMul = -1.0;
 const bool shadowHardwareFiltering = true;
+
+
+#ifdef DH_LOD_FADE
+#endif

@@ -27,8 +27,8 @@ uniform vec3 fogColor;
 uniform float viewWidth;
 uniform float far;
 
-#include "/lib/tex_noise.glsl"
 #include "/lib/sun.glsl"
+#include "/lib/tex_noise.glsl"
 
 
 void main() {
@@ -49,9 +49,11 @@ void main() {
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
     // #elif DEBUG_VIEW != DEBUG_VIEW_BLOCK_ID
     #else
-        // Fake Texture Noise
-        vec3 worldPos = localPos.xyz + cameraPosition;
-        applyNoise(gl_FragColor, worldPos, viewDist);
+        #ifdef DH_TEX_NOISE
+            // Fake Texture Noise
+            vec3 worldPos = localPos.xyz + cameraPosition;
+            applyNoise(gl_FragColor, worldPos, viewDist);
+        #endif
 
         // Directional Sky Lighting
         vec3 sunDir = GetSunVector();

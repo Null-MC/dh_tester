@@ -42,7 +42,7 @@ void main() {
     float viewDist = length(viewPos.xyz);
     vec3 viewDir = viewPos.xyz / viewDist;
 
-    #ifdef DISTANT_HORIZONS
+    #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float farTrans = dh_clipDistF * far;
         if (viewDist > dh_clipDistF * far) {discard; return;}
 

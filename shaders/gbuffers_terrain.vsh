@@ -3,12 +3,15 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
+in vec3 mc_Entity;
+
 varying vec3 localPos;
 varying vec4 gcolor;
 varying vec2 texcoord;
 varying vec2 lmcoord;
 varying vec3 viewNormal;
 
+uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
 
 #ifdef SHADOWS_ENABLED
@@ -43,6 +46,12 @@ void main() {
     lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 
     localPos = mul3(gbufferModelViewInverse, viewPos);
+
+    uint blockId = uint(mc_Entity.x + 0.5);
+
+    if (blockId == 11u) {
+        viewNormal = mat3(gbufferModelView) * vec3(0.0, 1.0, 0.0);
+    }
 
     #ifdef SHADOWS_ENABLED
         float viewDist = length(viewPos);

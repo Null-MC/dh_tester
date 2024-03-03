@@ -33,5 +33,13 @@ float linearizeDepth(const in float d, const in float zNear, const in float zFar
     return 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));
 }
 
+vec3 mul3(const in mat4 matrix, const in vec3 vector) {
+    return mat3(matrix) * vector + matrix[3].xyz;
+}
+
+
 #ifdef SHADOWS_ENABLED
+#endif
+
+#ifdef DH_LOD_FADE
 #endif

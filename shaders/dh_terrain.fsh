@@ -28,7 +28,10 @@ uniform float viewWidth;
 uniform float far;
 
 #include "/lib/sun.glsl"
-#include "/lib/tex_noise.glsl"
+
+#ifdef DH_TEX_NOISE
+    #include "/lib/tex_noise.glsl"
+#endif
 
 
 void main() {

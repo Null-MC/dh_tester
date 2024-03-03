@@ -22,7 +22,3 @@ const float shadowDistance = SHADOW_DIST;
 const int shadowMapResolution = 2048; // [1024 2048 4096 8192]
 const float shadowDistanceRenderMul = -1.0;
 const bool shadowHardwareFiltering = true;
-
-
-#ifdef DH_LOD_FADE
-#endif

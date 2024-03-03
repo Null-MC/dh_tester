@@ -3,16 +3,17 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 viewPos;
+varying vec3 localPos;
 varying vec4 gcolor;
 varying vec2 texcoord;
 varying vec2 lmcoord;
 varying vec3 viewNormal;
 
+uniform mat4 gbufferModelViewInverse;
+
 #ifdef SHADOWS_ENABLED
     varying vec3 shadowPos;
 
-    uniform mat4 gbufferModelViewInverse;
     uniform mat4 shadowModelView;
     uniform mat4 shadowProjection;
 
@@ -36,16 +37,20 @@ void main() {
     gl_Position = ftransform();
     gcolor = gl_Color;
     
-    viewPos = gl_ModelViewMatrix * gl_Vertex;
+    vec3 viewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
     viewNormal = gl_NormalMatrix * gl_Normal;
     texcoord  = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
     lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 
+    localPos = mul3(gbufferModelViewInverse, viewPos);
+
     #ifdef SHADOWS_ENABLED
-        float viewDist = length(viewPos.xyz);
+        float viewDist = length(viewPos);
         float shadowBias = SHADOW_NORMAL_BIAS * (viewDist + 8.0);
-        vec3 offsetViewPos = viewPos.xyz + viewNormal * shadowBias;
-        vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
+        vec3 offsetViewPos = viewPos + viewNormal * shadowBias;
+        // vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
+
+        shadowPos = mul3(shadowModelView, localPos);
 
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
@@ -54,9 +59,9 @@ void main() {
                 mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
             #endif
 
-            shadowPos = (shadowProjectionFit * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjectionFit, shadowPos);
         #else
-            shadowPos = (shadowProjection * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjection, shadowPos);
         #endif
 
         #if SHADOW_DISTORTION > 0
@@ -64,7 +69,8 @@ void main() {
                 vec3 shadowCameraOffset = vec3(0.0);
 
                 #ifdef SHADOW_FRUSTUM_FIT
-                    shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                    // shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                    shadowCameraOffset = shadowProjectionFit[3].xyz;
                 #endif
             #endif
 

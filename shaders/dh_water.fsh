@@ -35,7 +35,10 @@ uniform float farPlane;
 #endif
 
 #include "/lib/sun.glsl"
-#include "/lib/tex_noise.glsl"
+
+#ifdef DH_TEX_NOISE
+    #include "/lib/tex_noise.glsl"
+#endif
 
 
 void main() {

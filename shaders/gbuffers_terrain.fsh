@@ -3,7 +3,7 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 viewPos;
+varying vec3 localPos;
 varying vec4 gcolor;
 varying vec2 texcoord;
 varying vec2 lmcoord;
@@ -22,6 +22,7 @@ uniform sampler2D lightmap;
 
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
+uniform vec3 cameraPosition;
 uniform float dhFarPlane;
 uniform int worldTime;
 uniform vec3 fogColor;
@@ -29,9 +30,13 @@ uniform float far;
 
 #include "/lib/sun.glsl"
 
+#if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
+    #include "/lib/tex_noise.glsl"
+#endif
+
 
 void main() {
-    float viewDist = length(viewPos.xyz);
+    float viewDist = length(localPos);
     // if (viewDist > dh_clipDistF * far) {discard; return;}
 
     vec3 _viewNormal = normalize(viewNormal);
@@ -46,6 +51,12 @@ void main() {
 
         gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
         gl_FragColor.a   = textureLod(gtexture, texcoord, lodGrad).a;
+
+        #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
+            // Fake Texture Noise
+            vec3 worldPos = localPos + cameraPosition;
+            applyNoise(gl_FragColor, worldPos, viewDist);
+        #endif
     #else
         gl_FragColor = texture(gtexture, texcoord);
     #endif

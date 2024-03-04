@@ -62,6 +62,8 @@ void main() {
 
         shadowPos = mul3(shadowModelView, localPos);
 
+        shadowPos.z += SHADOW_OFFSET_BIAS;
+
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
                 vec3 boundsMin, boundsMax;

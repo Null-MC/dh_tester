@@ -17,10 +17,6 @@ uniform float near;
 uniform float farPlane;
 
 
-float Gaussian(const in float sigma, const in float x) {
-    return exp(-(x*x) / (2.0 * (sigma*sigma)));
-}
-
 float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) {
     const vec3 g_sigma = vec3(1.6);
     
@@ -30,10 +26,10 @@ float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) 
     float accum = 0.0;
     float total = 0.0;
     for (int iy = -SSAO_BLUR_RADIUS; iy <= SSAO_BLUR_RADIUS; iy++) {
-        float fy = Gaussian(g_sigma.y, iy);
+        float fy = gaussian(g_sigma.y, iy);
 
         for (int ix = -SSAO_BLUR_RADIUS; ix <= SSAO_BLUR_RADIUS; ix++) {
-            float fx = Gaussian(g_sigma.x, ix);
+            float fx = gaussian(g_sigma.x, ix);
 
             vec2 sampleTex = texcoord + ivec2(ix, iy) * pixelSize;
             float sampleValue = textureLod(colortex1, sampleTex, 0).r;
@@ -51,7 +47,7 @@ float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) 
             }
 
             float depthDiff = abs(depthL - linearDepth);
-            float fv = Gaussian(g_sigma.z, depthDiff);
+            float fv = gaussian(g_sigma.z, depthDiff);
 
             float weight = fx*fy*fv;
             accum += weight * sampleValue;

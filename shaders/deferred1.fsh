@@ -20,8 +20,9 @@ uniform float near;
 uniform float farPlane;
 
 
+const float ssaoSigma = 2.4;
 uniform float gRadius = 3.0;
-uniform float gStrength = 8.0;
+uniform float gStrength = 2.0;
 uniform float gMinLight = 0.25;
 uniform float gBias = 0.02;
 
@@ -85,8 +86,8 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
         vec3 sampleNormal = diff / sampleDist;
 
         float sampleNoLm = max(dot(viewNormal, sampleNormal) - gBias, 0.0);
-        float aoF = 1.0 - saturate(sampleDist / gRadius);
-        occlusion += sampleNoLm * aoF;
+        float sampleF = saturate(sampleDist / gRadius);
+        occlusion += sampleNoLm * gaussian(ssaoSigma, sampleF);
         sampleCount++;
     }
 

@@ -36,6 +36,10 @@ float maxOf(const in vec2 vec) {return max(vec[0], vec[1]);}
 
 vec3 unproject(const in vec4 pos) {return pos.xyz / pos.w;}
 
+float gaussian(const in float sigma, const in float x) {
+    return exp(-(x*x) / (2.0 * (sigma*sigma)));
+}
+
 float linearizeDepth(const in float d, const in float zNear, const in float zFar) {
     float z_n = 2.0 * d - 1.0;
     return 2.0 * zNear * zFar / (zFar + zNear - z_n * (zFar - zNear));

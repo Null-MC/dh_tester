@@ -48,10 +48,13 @@ void main() {
     blockId = int(mc_Entity.x + 0.5);
     
     #ifdef SHADOWS_ENABLED
-        float viewDist = length(viewPos.xyz);
-        float shadowBias = SHADOW_NORMAL_BIAS * (viewDist + 8.0);
-        vec3 offsetViewPos = viewPos.xyz + viewNormal * shadowBias;
-        vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
+        //float viewDist = length(viewPos.xyz);
+        vec3 offsetViewPos = viewPos.xyz + viewNormal * SHADOW_NORMAL_BIAS;
+        vec3 localPos = mul3(gbufferModelViewInverse, offsetViewPos);
+
+        shadowPos = mul3(shadowModelView, localPos);
+
+        shadowPos.z += SHADOW_OFFSET_BIAS;
 
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
@@ -60,9 +63,9 @@ void main() {
                 mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
             #endif
 
-            shadowPos = (shadowProjectionFit * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjectionFit, shadowPos);
         #else
-            shadowPos = (shadowProjection * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjection, shadowPos);
         #endif
 
         #if SHADOW_DISTORTION > 0

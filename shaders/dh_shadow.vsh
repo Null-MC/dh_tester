@@ -27,14 +27,12 @@ uniform mat4 shadowProjection;
 
 #include "/lib/shadow_distortion.glsl"
 
-// #include "/lib/hsv.glsl"
-
 
 void main() {
     gcolor = gl_Color;
 
-    vec4 shadowViewPos = gl_ModelViewMatrix * gl_Vertex;
-    localPos = (shadowModelViewInverse * shadowViewPos).xyz;
+    vec3 shadowViewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
+    localPos = mul3(shadowModelViewInverse, shadowViewPos);
 
     #ifdef SHADOW_FRUSTUM_FIT
         #ifndef IRIS_FEATURE_SSBO
@@ -43,27 +41,22 @@ void main() {
             mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
         #endif
 
-        gl_Position = shadowProjectionFit * shadowViewPos;
+        gl_Position.xyz = mul3(shadowProjectionFit, shadowViewPos);
     #else
-        // gl_Position = ftransform();
-        gl_Position = shadowProjection * shadowViewPos;
+        gl_Position.xyz = mul3(shadowProjection, shadowViewPos);
     #endif
+
+    gl_Position.w = 1.0;
     
     #if SHADOW_DISTORTION > 0
         #ifndef IRIS_FEATURE_SSBO
             vec3 shadowCameraOffset = vec3(0.0);
 
             #ifdef SHADOW_FRUSTUM_FIT
-                shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                shadowCameraOffset = shadowProjectionFit[3].xyz;
             #endif
         #endif
     
         distort(gl_Position.xyz, shadowCameraOffset.xy);
     #endif
-
-    // vec3 hsv = vec3(1.0);
-    // hsv.x = dhMaterialId / 15.0;
-
-    // vec3 color = HsvToRgb(hsv);
-    // gcolor.rgb = linear_to_srgb(color);
 }

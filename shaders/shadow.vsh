@@ -36,8 +36,8 @@ uniform mat4 shadowModelViewInverse;
 
 
 void main() {
-    vec4 shadowViewPos = gl_ModelViewMatrix * gl_Vertex;
-    localPos = (shadowModelViewInverse * shadowViewPos).xyz;
+    vec3 shadowViewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
+    localPos = mul3(shadowModelViewInverse, shadowViewPos);
 
     #ifdef SHADOW_FRUSTUM_FIT
         #ifndef IRIS_FEATURE_SSBO
@@ -46,17 +46,19 @@ void main() {
             mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
         #endif
 
-        gl_Position = shadowProjectionFit * shadowViewPos;
+        gl_Position.xyz = mul3(shadowProjectionFit, shadowViewPos);
     #else
-        gl_Position = shadowProjection * shadowViewPos;
+        gl_Position.xyz = mul3(shadowProjection, shadowViewPos);
     #endif
+
+    gl_Position.w = 1.0;
     
     #if SHADOW_DISTORTION > 0
         #ifndef IRIS_FEATURE_SSBO
             vec3 shadowCameraOffset = vec3(0.0);
 
             #ifdef SHADOW_FRUSTUM_FIT
-                shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                shadowCameraOffset = shadowProjectionFit[3].xyz;
             #endif
         #endif
 

@@ -3,10 +3,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 localPos;
+varying vec3 localPos;
+varying vec3 viewNormal;
 varying vec4 gcolor;
 varying vec2 lmcoord;
-varying vec3 viewNormal;
 
 #ifdef SHADOWS_ENABLED
     varying vec3 shadowPos;
@@ -44,26 +44,27 @@ uniform vec3 cameraPosition;
 
 
 void main() {
-    viewNormal = mat3(gbufferModelView) * gl_Normal;
+    viewNormal = mat3(gl_ModelViewMatrix) * gl_Normal;
     gcolor = gl_Color;
 
     lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
     // lmcoord  = gl_MultiTexCoord1.xy;
     
-    vec4 vPos = gl_Vertex;
+    vec3 vPos = gl_Vertex.xyz;
 
     vec3 cameraOffset = fract(cameraPosition);
-    vPos.xyz = floor(vPos.xyz + cameraOffset + 0.5) - cameraOffset;
+    vPos = floor(vPos + cameraOffset + 0.5) - cameraOffset;
 
-    vec4 viewPos = gl_ModelViewMatrix * vPos;
-    localPos = gbufferModelViewInverse * viewPos;
-    gl_Position = dhProjection * viewPos;
+    vec3 viewPos = mul3(gl_ModelViewMatrix, vPos);
+    localPos = mul3(gbufferModelViewInverse, viewPos);
+    gl_Position = dhProjection * vec4(viewPos, 1.0);
 
     #ifdef SHADOWS_ENABLED
-        float viewDist = length(viewPos.xyz);
-        float shadowBias = SHADOW_NORMAL_BIAS * (viewDist + 8.0);
-        vec3 offsetViewPos = viewPos.xyz + viewNormal * shadowBias;
-        vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
+        //float viewDist = length(viewPos);
+        vec3 offsetViewPos = viewPos + viewNormal * SHADOW_NORMAL_BIAS;
+
+        shadowPos = mul3(gbufferModelViewInverse, offsetViewPos);
+        shadowPos = mul3(shadowModelView, shadowPos);
 
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
@@ -72,9 +73,9 @@ void main() {
                 mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
             #endif
 
-            shadowPos = (shadowProjectionFit * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjectionFit, shadowPos);
         #else
-            shadowPos = (shadowProjection * (shadowModelView * localPos)).xyz;
+            shadowPos = mul3(shadowProjection, shadowPos);
         #endif
 
         #if SHADOW_DISTORTION > 0
@@ -82,7 +83,7 @@ void main() {
                 vec3 shadowCameraOffset = vec3(0.0);
 
                 #ifdef SHADOW_FRUSTUM_FIT
-                    shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                    shadowCameraOffset = shadowProjectionFit[3].xyz;
                 #endif
             #endif
 

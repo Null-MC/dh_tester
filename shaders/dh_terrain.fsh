@@ -3,10 +3,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 localPos;
+varying vec3 localPos;
+varying vec3 viewNormal;
 varying vec4 gcolor;
 varying vec2 lmcoord;
-varying vec3 viewNormal;
 
 #ifdef SHADOWS_ENABLED
     varying vec3 shadowPos;
@@ -38,7 +38,7 @@ void main() {
     gl_FragColor = gcolor;
 
     // Distane-clip DH terrain  when it is closer than threshold
-    float viewDist = length(localPos.xyz);
+    float viewDist = length(localPos);
     if (viewDist < dh_clipDistF * far) {discard; return;}
 
     vec3 _viewNormal = normalize(viewNormal);
@@ -54,7 +54,7 @@ void main() {
     #else
         #ifdef DH_TEX_NOISE
             // Fake Texture Noise
-            vec3 worldPos = localPos.xyz + cameraPosition;
+            vec3 worldPos = localPos + cameraPosition;
             applyNoise(gl_FragColor, worldPos, viewDist);
         #endif
 

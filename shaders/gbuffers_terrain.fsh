@@ -40,8 +40,6 @@ uniform float far;
 
 void main() {
     float viewDist = length(localPos);
-    // if (viewDist > dh_clipDistF * far) {discard; return;}
-
     vec3 _viewNormal = normalize(viewNormal);
 
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
@@ -50,14 +48,11 @@ void main() {
         float lodFinal = max(lodGrad, 4.0 * lodMinF);
 
         gl_FragColor = textureLod(gtexture, texcoord, lodFinal);
-        // gl_FragColor.rgb = textureLod(gtexture, texcoord, lodFinal).rgb;
 
-        if (blockId == BLOCK_PLANT) {
+        if (blockId == BLOCK_PLANT)
             gl_FragColor.a = textureLod(gtexture, texcoord, lodGrad).a;
-        }
 
         #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
-            // Fake Texture Noise
             vec3 worldPos = localPos + cameraPosition;
             applyNoise(gl_FragColor, worldPos, viewDist);
         #endif

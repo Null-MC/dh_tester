@@ -27,15 +27,20 @@ uniform sampler2D lightmap;
 
 uniform mat4 gbufferModelView;
 uniform float dhFarPlane;
-uniform int worldTime;
-uniform vec3 fogColor;
 uniform float viewWidth;
+uniform int worldTime;
 uniform float far;
+
+uniform int isEyeInWater;
+uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
 
 #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
     uniform mat4 gbufferModelViewInverse;
 #endif
 
+#include "/lib/fog.glsl"
 #include "/lib/sun.glsl"
 #include "/lib/lighting.glsl"
 
@@ -90,7 +95,7 @@ void main() {
         float specularF = pow(max(dot(reflectDir, lightViewDir), 0.0), 32);
         outFinal.rgb += vIn.color.a * specularF * shadowF;
 
-        float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+        float fogF = GetFogFactor(viewDist);
         outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
     #endif
 }

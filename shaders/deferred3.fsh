@@ -12,9 +12,15 @@ uniform mat4 gbufferProjectionInverse;
 uniform mat4 dhProjectionInverse;
 uniform float dhNearPlane;
 uniform float dhFarPlane;
-uniform float near;
 uniform float farPlane;
+uniform float near;
+
+uniform int isEyeInWater;
 uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
+
+#include "/lib/fog.glsl"
 
 
 /* RENDERTARGETS: 0 */
@@ -41,6 +47,6 @@ void main() {
         vec3 viewPos = unproject(projectionInv * vec4(ndcPos, 1.0));
         float viewDist = length(viewPos);
 
-        gl_FragColor.a = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+        gl_FragColor.a = GetFogFactor(viewDist);
     }
 }

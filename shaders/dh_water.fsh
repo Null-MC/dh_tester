@@ -28,15 +28,20 @@ uniform vec3 cameraPosition;
 uniform float dhNearPlane;
 uniform float dhFarPlane;
 uniform int worldTime;
-uniform vec3 fogColor;
 uniform float near;
 uniform float far;
 uniform float farPlane;
+
+uniform int isEyeInWater;
+uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
 
 #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
     uniform mat4 gbufferModelViewInverse;
 #endif
 
+#include "/lib/fog.glsl"
 #include "/lib/sun.glsl"
 #include "/lib/lighting.glsl"
 
@@ -96,7 +101,7 @@ void main() {
             outFinal.rgb += vIn.color.a * specularF * shadowF;
         }
 
-        float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+        float fogF = GetFogFactor(viewDist);
         outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
         outFinal.a = max(outFinal.a, fogF);
     #endif

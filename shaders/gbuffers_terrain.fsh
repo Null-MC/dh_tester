@@ -29,9 +29,14 @@ uniform mat4 gbufferModelViewInverse;
 uniform vec3 cameraPosition;
 uniform float dhFarPlane;
 uniform int worldTime;
-uniform vec3 fogColor;
 uniform float far;
 
+uniform int isEyeInWater;
+uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
+
+#include "/lib/fog.glsl"
 #include "/lib/sun.glsl"
 #include "/lib/lighting.glsl"
 
@@ -88,7 +93,9 @@ void main() {
         float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
         outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
 
-        float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-        outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
+        #ifndef SSAO_ENABLED
+            float fogF = GetFogFactor(viewDist);
+            outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
+        #endif
     #endif
 }

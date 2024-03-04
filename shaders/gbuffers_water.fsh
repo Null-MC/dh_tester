@@ -1,4 +1,5 @@
 #version 330 compatibility
+#extension GL_EXT_gpu_shader4_1 : enable
 
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
@@ -46,10 +47,7 @@ void main() {
         float farTrans = dh_clipDistF * far;
         if (viewDist > dh_clipDistF * far) {discard; return;}
 
-        mat2 dFdXY = mat2(dFdx(texcoord), dFdy(texcoord));
-        float md = max(dot(dFdXY[0], dFdXY[0]), dot(dFdXY[1], dFdXY[1]));
-        float lodGrad = 0.5 * log2(md);
-
+        float lodGrad = textureQueryLod(gtexture, texcoord).x;
         float lodMinF = smoothstep(0.5 * farTrans, farTrans, viewDist);
         float lodFinal = max(lodGrad, 4.0 * lodMinF);
 

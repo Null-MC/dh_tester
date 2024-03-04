@@ -1,8 +1,14 @@
 #version 330 compatibility
 
-varying vec4 pos;
-varying vec4 gcolor;
-varying vec2 lmcoord;
+#include "/lib/settings.glsl"
+#include "/lib/common.glsl"
+
+in VertexData {
+    vec4 color;
+    vec2 lmcoord;
+    vec3 viewPos;
+    vec3 viewNormal;
+} vIn;
 
 uniform sampler2D lightmap;
 uniform sampler2D dhDepthTex;
@@ -11,41 +17,45 @@ uniform mat4 gbufferModelView;
 uniform float dhNearPlane;
 uniform float dhFarPlane;
 uniform int worldTime;
-uniform vec3 fogColor;
 
-#include "/lib/settings.glsl"
-#include "/lib/common.glsl"
+uniform int isEyeInWater;
+uniform vec3 fogColor;
+uniform float fogStart;
+uniform float fogEnd;
+
+#include "/lib/fog.glsl"
 #include "/lib/sun.glsl"
+#include "/lib/lighting.glsl"
 
 
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 outFinal;
 
 void main() {
-    float depthDh = texelFetch(dhDepthTex, ivec2(gl_FragCoord.xy), 0).r;
-    float depthDhL = linearizeDepth(depthDh, dhNearPlane, dhFarPlane);
+    float dhDepth = texelFetch(dhDepthTex, ivec2(gl_FragCoord.xy), 0).r;
+    float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
     
-    if (depthDhL < -pos.z) {
+    if (dhDepth > 0.0 && dhDepthL < -vIn.viewPos.z) {
         discard;
         return;
     }
 
-    outFinal = gcolor;
+    float viewDist = length(vIn.viewPos);
+    vec3 _viewNormal = normalize(vIn.viewNormal);
+    
+    outFinal = vIn.color;
 
-    vec3 sunDir = GetSunVector();
-    vec3 lightDir = sunDir * sign(sunDir.y);
-    vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
+    float shadowF = 1.0;
+    // #ifdef SHADOWS_ENABLED
+    //     if (saturate(vIn.shadowPos) == vIn.shadowPos)
+    //         shadowF = texture(shadowtex0, vIn.shadowPos);
+    // #endif
 
-    vec2 _lm = clamp((lmcoord - (0.5/16.0)) / (15.0/16.0), 0.0, 1.0);
-    vec3 viewNormal = normalize(cross(dFdx(pos.xyz), dFdy(pos.xyz)));
-    float NdotL = max(dot(viewNormal, lightViewDir), 0.0);
-    _lm.y *= pow(NdotL, 0.5) * 0.5 + 0.5;
+    vec3 lightViewDir = GetSkyLightViewDir();
 
-    vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-    vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-    outFinal.rgb *= blockSkyLight;
+    float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
+    outFinal.rgb *= GetDiffuseLighting(vIn.lmcoord, shadowF, NoLm);
 
-    float viewDist = length(pos.xyz);
-    float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
+    float fogF = GetFogFactor(viewDist);
     outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
 }

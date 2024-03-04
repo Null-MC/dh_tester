@@ -89,11 +89,12 @@ void main() {
         vec3 lightViewDir = GetSkyLightViewDir();
 
         float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
-        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
+        outFinal.rgb *= GetDiffuseLighting(vIn.lmcoord, shadowF, NoLm);
 
-        vec3 reflectDir = reflect(viewDir, _viewNormal);
-        float specularF = pow(max(dot(reflectDir, lightViewDir), 0.0), 32);
-        outFinal.rgb += vIn.color.a * specularF * shadowF;
+        if (isWater) {
+            float specularF = GetSpecularF(viewDir, _viewNormal, lightViewDir);
+            outFinal.rgb += outFinal.a * shadowF * specularF;
+        }
 
         float fogF = GetFogFactor(viewDist);
         outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);

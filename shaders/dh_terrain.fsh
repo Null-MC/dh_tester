@@ -78,7 +78,7 @@ void main() {
         vec3 lightViewDir = GetSkyLightViewDir();
 
         float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
-        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
+        outFinal.rgb *= GetDiffuseLighting(vIn.lmcoord, shadowF, NoLm);
 
         #ifndef SSAO_ENABLED
             float fogF = GetFogFactor(viewDist);

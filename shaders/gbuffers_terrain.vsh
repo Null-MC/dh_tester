@@ -47,8 +47,8 @@ void main() {
     gl_Position = ftransform();
     vOut.color = gl_Color;
     
-    vec3 viewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
     vOut.viewNormal = gl_NormalMatrix * gl_Normal;
+    vec3 viewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
     vOut.texcoord  = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
     vOut.lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
 
@@ -56,10 +56,8 @@ void main() {
 
     vOut.blockId = uint(mc_Entity.x + 0.5);
 
-    if (vOut.blockId == BLOCK_PLANT) {
-        // TODO: extract from matrix
-        vOut.viewNormal = mat3(gbufferModelView) * vec3(0.0, 1.0, 0.0);
-    }
+    if (vOut.blockId == BLOCK_PLANT)
+        vOut.viewNormal = gbufferModelView[1].xyz;
 
     #ifdef SHADOWS_ENABLED
         vec3 offsetViewPos = viewPos + vOut.viewNormal * SHADOW_NORMAL_BIAS;
@@ -86,7 +84,6 @@ void main() {
                 vec3 shadowCameraOffset = vec3(0.0);
 
                 #ifdef SHADOW_FRUSTUM_FIT
-                    // shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
                     shadowCameraOffset = shadowProjectionFit[3].xyz;
                 #endif
             #endif

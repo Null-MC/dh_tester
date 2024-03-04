@@ -59,7 +59,9 @@ void main() {
 
     float depth = texelFetch(depthtex0, ivec2(gl_FragCoord.xy), 0).r;
     float depthL = linearizeDepth(depth, near, farPlane);
+
     float depthDhL = linearizeDepth(gl_FragCoord.z, dhNearPlane, dhFarPlane);
+    
     if (depthL < depthDhL && depth < 1.0) {discard; return;}
 
     outFinal = vIn.color;
@@ -78,7 +80,6 @@ void main() {
         bool isWater = (vIn.materialId == DH_BLOCK_WATER);
 
         #ifdef DH_TEX_NOISE
-            // Fake Texture Noise
             vec3 worldPos = vIn.localPos + cameraPosition;
             applyNoise(outFinal, worldPos, viewDist);
         #endif
@@ -95,9 +96,10 @@ void main() {
         outFinal.rgb *= GetDiffuseLighting(vIn.lmcoord, shadowF, NoLm);
 
         if (isWater) {
-            vec3 _viewDir = normalize(mat3(gbufferModelView) * vIn.localPos);
+            vec3 viewPos = mul3(gbufferModelView, vIn.localPos);
+            vec3 viewDir = normalize(viewPos);
 
-            float specularF = GetSpecularF(_viewDir, _viewNormal, lightViewDir);
+            float specularF = GetSpecularF(viewDir, _viewNormal, lightViewDir);
             outFinal.rgb += outFinal.a * shadowF * specularF;
         }
 

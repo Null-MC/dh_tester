@@ -8,6 +8,7 @@ out VertexData {
     vec2 lmcoord;
     vec3 localPos;
     vec3 viewNormal;
+
     flat int materialId;
 
     #ifdef SHADOWS_ENABLED
@@ -63,8 +64,7 @@ void main() {
 
     vec3 viewPos = mul3(gl_ModelViewMatrix, vPos);
     vOut.localPos = mul3(gbufferModelViewInverse, viewPos);
-    gl_Position.xyz = mul3(dhProjection, viewPos);
-    gl_Position.w = 1.0;
+    gl_Position = dhProjection * vec4(viewPos, 1.0);
 
     #ifdef SHADOWS_ENABLED
         // float viewDist = length(viewPos);

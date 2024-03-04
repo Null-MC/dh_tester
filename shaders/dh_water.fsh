@@ -8,6 +8,7 @@ in VertexData {
     vec2 lmcoord;
     vec3 localPos;
     vec3 viewNormal;
+
     flat int materialId;
 
     #ifdef SHADOWS_ENABLED
@@ -37,6 +38,7 @@ uniform float farPlane;
 #endif
 
 #include "/lib/sun.glsl"
+#include "/lib/lighting.glsl"
 
 #ifdef DH_TEX_NOISE
     #include "/lib/tex_noise.glsl"
@@ -76,24 +78,16 @@ void main() {
             applyNoise(outFinal, worldPos, viewDist);
         #endif
 
-        vec3 sunDir = GetSunVector();
-        vec3 lightDir = sunDir * sign(sunDir.y);
-        vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
-        
         float shadowF = 1.0;
         #ifdef SHADOWS_ENABLED
             if (saturate(vIn.shadowPos) == vIn.shadowPos)
                 shadowF = texture(shadowtex1, vIn.shadowPos);
         #endif
 
-        vec2 _lm = (vIn.lmcoord - (0.5/16.0)) / (15.0/16.0);
-        float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
-        float lit = pow(NdotL, 0.5) * shadowF;
-        _lm.y *= lit * 0.5 + 0.5;
+        vec3 lightViewDir = GetSkyLightViewDir();
 
-        vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-        vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        outFinal.rgb *= blockSkyLight;
+        float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
+        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
 
         if (isWater) {
             vec3 _viewDir = normalize(mat3(gbufferModelView) * vIn.localPos);

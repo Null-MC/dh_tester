@@ -24,5 +24,8 @@ void main() {
     float viewDist = length(vIn.localPos);
     if (isWater && viewDist > dh_clipDistF * far) {discard;}
 
-    outFinal = texture(gtexture, vIn.texcoord) * vIn.color;
+    vec4 color = texture(gtexture, vIn.texcoord);
+    if (color.a < 0.1) {discard; return;}
+
+    outFinal = color * vIn.color;
 }

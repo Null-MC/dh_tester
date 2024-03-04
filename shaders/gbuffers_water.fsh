@@ -37,6 +37,7 @@ uniform float far;
 #endif
 
 #include "/lib/sun.glsl"
+#include "/lib/lighting.glsl"
 
 
 /* RENDERTARGETS: 0 */
@@ -74,24 +75,16 @@ void main() {
         outFinal.rgb = vec3(vIn.lmcoord, 0.0);
         outFinal.rgb = linear_to_srgb(outFinal.rgb);
     #else
-        vec3 sunDir = GetSunVector();
-        vec3 lightDir = sunDir * sign(sunDir.y);
-        vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
-
         float shadowF = 1.0;
         #ifdef SHADOWS_ENABLED
             if (saturate(vIn.shadowPos) == vIn.shadowPos)
                 shadowF = texture(shadowtex1, vIn.shadowPos);
         #endif
 
-        vec2 _lm = (vIn.lmcoord - (0.5/16.0)) / (15.0/16.0);
-        float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
-        float lit = pow(NdotL, 0.5) * shadowF;
-        _lm.y *= lit * 0.5 + 0.5;
+        vec3 lightViewDir = GetSkyLightViewDir();
 
-        vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-        vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        outFinal.rgb *= blockSkyLight;
+        float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
+        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
 
         vec3 reflectDir = reflect(viewDir, _viewNormal);
         float specularF = pow(max(dot(reflectDir, lightViewDir), 0.0), 32);

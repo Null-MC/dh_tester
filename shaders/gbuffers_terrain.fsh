@@ -33,6 +33,7 @@ uniform vec3 fogColor;
 uniform float far;
 
 #include "/lib/sun.glsl"
+#include "/lib/lighting.glsl"
 
 #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
     #include "/lib/tex_noise.glsl"
@@ -64,6 +65,8 @@ void main() {
         outFinal = texture(gtexture, vIn.texcoord);
     #endif
 
+    if (outFinal.a < 0.1) {discard; return;}
+
     outFinal *= vIn.color;
 
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
@@ -74,25 +77,17 @@ void main() {
         outFinal.rgb = vec3(vIn.lmcoord, 0.0);
         outFinal.rgb = linear_to_srgb(outFinal.rgb);
     #else
-        vec3 sunDir = GetSunVector();
-        vec3 lightDir = sunDir * sign(sunDir.y);
-        vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
-
-        vec2 _lm = clamp((vIn.lmcoord - (0.5/16.0)) / (15.0/16.0), 0.0, 1.0);
-        float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
-        float lit = pow(NdotL, 0.5);
-
+        float shadowF = 1.0;
         #ifdef SHADOWS_ENABLED
-            lit *= texture(shadowtex0, vIn.shadowPos);
+            if (saturate(vIn.shadowPos) == vIn.shadowPos)
+                shadowF = texture(shadowtex0, vIn.shadowPos);
         #endif
 
-        _lm.y *= lit * 0.5 + 0.5;
+        vec3 lightViewDir = GetSkyLightViewDir();
 
-        vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-        vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        outFinal.rgb *= blockSkyLight;
+        float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
+        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
 
-        // float viewDist = length(viewPos.xyz);
         float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
         outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
     #endif

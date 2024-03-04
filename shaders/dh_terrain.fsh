@@ -30,6 +30,7 @@ uniform float viewWidth;
 uniform float far;
 
 #include "/lib/sun.glsl"
+#include "/lib/lighting.glsl"
 
 #ifdef DH_TEX_NOISE
     #include "/lib/tex_noise.glsl"
@@ -63,27 +64,16 @@ void main() {
             applyNoise(outFinal, worldPos, viewDist);
         #endif
 
-        // Directional Sky Lighting
-        vec3 sunDir = GetSunVector();
-        vec3 lightDir = sunDir * sign(sunDir.y);
-        vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
-
-        vec2 _lm = (vIn.lmcoord - (0.5/16.0)) / (15.0/16.0);
-        float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
-        float lit = pow(NdotL, 0.5);
-
+        float shadowF = 1.0;
         #ifdef SHADOWS_ENABLED
-            if (clamp(vIn.shadowPos, vec3(0.0), vec3(1.0)) == vIn.shadowPos)
-                lit *= texture(shadowtex0, vIn.shadowPos);
+            if (saturate(vIn.shadowPos) == vIn.shadowPos)
+                shadowF = texture(shadowtex0, vIn.shadowPos);
         #endif
 
-        // Keep 50% of sk-light as ambient lighting
-        _lm.y *= lit * 0.5 + 0.5;
+        vec3 lightViewDir = GetSkyLightViewDir();
 
-        // LightMap Lighting
-        vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
-        vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        outFinal.rgb *= blockSkyLight;
+        float NoLm = max(dot(_viewNormal, lightViewDir), 0.0);
+        outFinal.rgb *= GetLighting(vIn.lmcoord, shadowF, NoLm);
 
         #ifndef SSAO_ENABLED
             // Fog

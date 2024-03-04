@@ -38,4 +38,6 @@ screen.SSAO=SSAO
 
 option.SSAO_ENABLED=Enabled
 
+option.SSAO_SAMPLE_COUNT=Sample Count
+
 option.SSAO_BLUR_RADIUS=Blur Radius

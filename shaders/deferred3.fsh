@@ -12,8 +12,6 @@ uniform mat4 gbufferProjectionInverse;
 uniform mat4 dhProjectionInverse;
 uniform float dhNearPlane;
 uniform float dhFarPlane;
-// uniform float viewWidth;
-// uniform float viewHeight;
 uniform float near;
 uniform float farPlane;
 uniform vec3 fogColor;

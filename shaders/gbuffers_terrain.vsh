@@ -59,7 +59,6 @@ void main() {
         float viewDist = length(viewPos);
         float shadowBias = SHADOW_NORMAL_BIAS * (viewDist + 8.0);
         vec3 offsetViewPos = viewPos + viewNormal * shadowBias;
-        // vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
 
         shadowPos = mul3(shadowModelView, localPos);
 

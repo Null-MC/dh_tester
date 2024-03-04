@@ -17,9 +17,7 @@ uniform float dhFarPlane;
 uniform float viewWidth;
 uniform float viewHeight;
 uniform float near;
-// uniform float far;
 uniform float farPlane;
-
 
 
 uniform float gRadius = 2.0;

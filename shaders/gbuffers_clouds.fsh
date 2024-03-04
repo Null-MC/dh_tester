@@ -18,15 +18,19 @@ uniform vec3 fogColor;
 #include "/lib/sun.glsl"
 
 
+/* RENDERTARGETS: 0 */
+layout(location = 0) out vec4 outFinal;
+
 void main() {
     float depthDh = texelFetch(dhDepthTex, ivec2(gl_FragCoord.xy), 0).r;
     float depthDhL = linearizeDepth(depthDh, dhNearPlane, dhFarPlane);
+    
     if (depthDhL < -pos.z) {
         discard;
         return;
     }
 
-    gl_FragColor = gcolor;
+    outFinal = gcolor;
 
     vec3 sunDir = GetSunVector();
     vec3 lightDir = sunDir * sign(sunDir.y);
@@ -39,9 +43,9 @@ void main() {
 
     vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
     vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-    gl_FragColor.rgb *= blockSkyLight;
+    outFinal.rgb *= blockSkyLight;
 
     float viewDist = length(pos.xyz);
     float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-    gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
+    outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
 }

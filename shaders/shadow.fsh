@@ -3,10 +3,12 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec2 texcoord;
-varying vec3 localPos;
-varying vec4 gcolor;
-flat varying uint blockId;
+in VertexData {
+    vec2 texcoord;
+    vec3 localPos;
+    vec4 color;
+    flat uint blockId;
+} vIn;
 
 uniform sampler2D gtexture;
 
@@ -14,11 +16,13 @@ uniform float far;
 
 
 /* RENDERTARGETS: 0 */
-void main() {
-    bool isWater = (blockId == BLOCK_WATER);
+layout(location = 0) out vec4 outFinal;
 
-    float viewDist = length(localPos);
+void main() {
+    bool isWater = (vIn.blockId == BLOCK_WATER);
+
+    float viewDist = length(vIn.localPos);
     if (isWater && viewDist > dh_clipDistF * far) {discard;}
 
-    gl_FragColor = texture(gtexture, texcoord) * gcolor;
+    outFinal = texture(gtexture, vIn.texcoord) * vIn.color;
 }

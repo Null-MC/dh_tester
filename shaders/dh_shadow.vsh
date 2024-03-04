@@ -3,8 +3,10 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 gcolor;
-varying vec3 localPos;
+out VertexData {
+    vec4 color;
+    vec3 localPos;
+} vOut;
 
 uniform mat4 shadowModelViewInverse;
 uniform mat4 shadowProjection;
@@ -29,10 +31,10 @@ uniform mat4 shadowProjection;
 
 
 void main() {
-    gcolor = gl_Color;
+    vOut.color = gl_Color;
 
     vec3 shadowViewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
-    localPos = mul3(shadowModelViewInverse, shadowViewPos);
+    vOut.localPos = mul3(shadowModelViewInverse, shadowViewPos);
 
     #ifdef SHADOW_FRUSTUM_FIT
         #ifndef IRIS_FEATURE_SSBO

@@ -4,17 +4,18 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-flat in uint blockId;
+in VertexData {
+    vec4 color;
+    vec2 lmcoord;
+    vec2 texcoord;
+    vec3 localPos;
+    vec3 viewNormal;
+    flat uint blockId;
 
-varying vec3 localPos;
-varying vec4 gcolor;
-varying vec2 texcoord;
-varying vec2 lmcoord;
-varying vec3 viewNormal;
-
-#ifdef SHADOWS_ENABLED
-    varying vec3 shadowPos;
-#endif
+    #ifdef SHADOWS_ENABLED
+        vec3 shadowPos;
+    #endif
+} vIn;
 
 uniform sampler2D gtexture;
 uniform sampler2D lightmap;
@@ -38,58 +39,61 @@ uniform float far;
 #endif
 
 
+/* RENDERTARGETS: 0 */
+layout(location = 0) out vec4 outFinal;
+
 void main() {
-    float viewDist = length(localPos);
-    vec3 _viewNormal = normalize(viewNormal);
+    float viewDist = length(vIn.localPos);
+    vec3 _viewNormal = normalize(vIn.viewNormal);
 
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
-        float lodGrad = textureQueryLod(gtexture, texcoord).x;
+        float lodGrad = textureQueryLod(gtexture, vIn.texcoord).x;
         float lodMinF = smoothstep(0.7 * far, far, viewDist);
         float lodFinal = max(lodGrad, 4.0 * lodMinF);
 
-        gl_FragColor = textureLod(gtexture, texcoord, lodFinal);
+        outFinal = textureLod(gtexture, vIn.texcoord, lodFinal);
 
-        if (blockId == BLOCK_PLANT)
-            gl_FragColor.a = textureLod(gtexture, texcoord, lodGrad).a;
+        if (vIn.blockId == BLOCK_PLANT)
+            outFinal.a = textureLod(gtexture, vIn.texcoord, lodGrad).a;
 
         #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
-            vec3 worldPos = localPos + cameraPosition;
-            applyNoise(gl_FragColor, worldPos, viewDist);
+            vec3 worldPos = vIn.localPos + cameraPosition;
+            applyNoise(outFinal, worldPos, viewDist);
         #endif
     #else
-        gl_FragColor = texture(gtexture, texcoord);
+        outFinal = texture(gtexture, vIn.texcoord);
     #endif
 
-    gl_FragColor *= gcolor;
+    outFinal *= vIn.color;
 
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
         vec3 worldNormal = mat3(gbufferModelViewInverse) * _viewNormal;
-        gl_FragColor.rgb = normalize(worldNormal) * 0.5 + 0.5;
-        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+        outFinal.rgb = normalize(worldNormal) * 0.5 + 0.5;
+        outFinal.rgb = linear_to_srgb(outFinal.rgb);
     #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
-        gl_FragColor.rgb = vec3(lmcoord, 0.0);
-        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+        outFinal.rgb = vec3(vIn.lmcoord, 0.0);
+        outFinal.rgb = linear_to_srgb(outFinal.rgb);
     #else
         vec3 sunDir = GetSunVector();
         vec3 lightDir = sunDir * sign(sunDir.y);
         vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
 
-        vec2 _lm = clamp((lmcoord - (0.5/16.0)) / (15.0/16.0), 0.0, 1.0);
+        vec2 _lm = clamp((vIn.lmcoord - (0.5/16.0)) / (15.0/16.0), 0.0, 1.0);
         float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
         float lit = pow(NdotL, 0.5);
 
         #ifdef SHADOWS_ENABLED
-            lit *= texture(shadowtex0, shadowPos);
+            lit *= texture(shadowtex0, vIn.shadowPos);
         #endif
 
         _lm.y *= lit * 0.5 + 0.5;
 
         vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
         vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        gl_FragColor.rgb *= blockSkyLight;
+        outFinal.rgb *= blockSkyLight;
 
         // float viewDist = length(viewPos.xyz);
         float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-        gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
+        outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
     #endif
 }

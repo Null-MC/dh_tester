@@ -3,14 +3,16 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec3 localPos;
-varying vec3 viewNormal;
-varying vec4 gcolor;
-varying vec2 lmcoord;
+in VertexData {
+    vec4 color;
+    vec2 lmcoord;
+    vec3 localPos;
+    vec3 viewNormal;
 
-#ifdef SHADOWS_ENABLED
-    varying vec3 shadowPos;
-#endif
+    #ifdef SHADOWS_ENABLED
+        vec3 shadowPos;
+    #endif
+} vIn;
 
 uniform sampler2D lightmap;
 
@@ -34,28 +36,31 @@ uniform float far;
 #endif
 
 
+/* RENDERTARGETS: 0 */
+layout(location = 0) out vec4 outFinal;
+
 void main() {
-    gl_FragColor = gcolor;
+    outFinal = vIn.color;
 
     // Distane-clip DH terrain  when it is closer than threshold
-    float viewDist = length(localPos);
+    float viewDist = length(vIn.localPos);
     if (viewDist < dh_clipDistF * far) {discard; return;}
 
-    vec3 _viewNormal = normalize(viewNormal);
+    vec3 _viewNormal = normalize(vIn.viewNormal);
     
     #if DEBUG_VIEW == DEBUG_VIEW_WORLD_NORMAL
         vec3 localNormal = mat3(gbufferModelViewInverse) * _viewNormal;
-        gl_FragColor.rgb = normalize(localNormal) * 0.5 + 0.5;
-        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+        outFinal.rgb = normalize(localNormal) * 0.5 + 0.5;
+        outFinal.rgb = linear_to_srgb(outFinal.rgb);
     #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
-        gl_FragColor.rgb = vec3(lmcoord, 0.0);
-        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+        outFinal.rgb = vec3(vIn.lmcoord, 0.0);
+        outFinal.rgb = linear_to_srgb(outFinal.rgb);
     // #elif DEBUG_VIEW != DEBUG_VIEW_BLOCK_ID
     #else
         #ifdef DH_TEX_NOISE
             // Fake Texture Noise
-            vec3 worldPos = localPos + cameraPosition;
-            applyNoise(gl_FragColor, worldPos, viewDist);
+            vec3 worldPos = vIn.localPos + cameraPosition;
+            applyNoise(outFinal, worldPos, viewDist);
         #endif
 
         // Directional Sky Lighting
@@ -63,13 +68,13 @@ void main() {
         vec3 lightDir = sunDir * sign(sunDir.y);
         vec3 lightViewDir = mat3(gbufferModelView) * lightDir;
 
-        vec2 _lm = (lmcoord - (0.5/16.0)) / (15.0/16.0);
+        vec2 _lm = (vIn.lmcoord - (0.5/16.0)) / (15.0/16.0);
         float NdotL = max(dot(_viewNormal, lightViewDir), 0.0);
         float lit = pow(NdotL, 0.5);
 
         #ifdef SHADOWS_ENABLED
-            if (clamp(shadowPos, vec3(0.0), vec3(1.0)) == shadowPos)
-                lit *= texture(shadowtex0, shadowPos);
+            if (clamp(vIn.shadowPos, vec3(0.0), vec3(1.0)) == vIn.shadowPos)
+                lit *= texture(shadowtex0, vIn.shadowPos);
         #endif
 
         // Keep 50% of sk-light as ambient lighting
@@ -78,12 +83,12 @@ void main() {
         // LightMap Lighting
         vec2 lmFinal = _lm * (15.0/16.0) + (0.5/16.0);
         vec3 blockSkyLight = textureLod(lightmap, lmFinal, 0).rgb;
-        gl_FragColor.rgb *= blockSkyLight;
+        outFinal.rgb *= blockSkyLight;
 
         #ifndef SSAO_ENABLED
             // Fog
             float fogF = smoothstep(0.0, 0.5 * dhFarPlane, viewDist);
-            gl_FragColor.rgb = mix(gl_FragColor.rgb, fogColor, fogF);
+            outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
         #endif
     #endif
 }

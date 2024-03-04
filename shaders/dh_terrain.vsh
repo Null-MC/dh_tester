@@ -3,14 +3,16 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec3 localPos;
-varying vec3 viewNormal;
-varying vec4 gcolor;
-varying vec2 lmcoord;
+out VertexData {
+    vec4 color;
+    vec2 lmcoord;
+    vec3 localPos;
+    vec3 viewNormal;
 
-#ifdef SHADOWS_ENABLED
-    varying vec3 shadowPos;
-#endif
+    #ifdef SHADOWS_ENABLED
+        vec3 shadowPos;
+    #endif
+} vOut;
 
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
@@ -44,10 +46,10 @@ uniform vec3 cameraPosition;
 
 
 void main() {
-    viewNormal = mat3(gl_ModelViewMatrix) * gl_Normal;
-    gcolor = gl_Color;
+    vOut.viewNormal = mat3(gl_ModelViewMatrix) * gl_Normal;
+    vOut.color = gl_Color;
 
-    lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+    vOut.lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
     // lmcoord  = gl_MultiTexCoord1.xy;
     
     vec3 vPos = gl_Vertex.xyz;
@@ -56,15 +58,17 @@ void main() {
     vPos = floor(vPos + cameraOffset + 0.5) - cameraOffset;
 
     vec3 viewPos = mul3(gl_ModelViewMatrix, vPos);
-    localPos = mul3(gbufferModelViewInverse, viewPos);
+    vOut.localPos = mul3(gbufferModelViewInverse, viewPos);
     gl_Position = dhProjection * vec4(viewPos, 1.0);
 
     #ifdef SHADOWS_ENABLED
         //float viewDist = length(viewPos);
-        vec3 offsetViewPos = viewPos + viewNormal * SHADOW_NORMAL_BIAS;
+        vec3 offsetViewPos = viewPos + vOut.viewNormal * SHADOW_NORMAL_BIAS;
 
-        shadowPos = mul3(gbufferModelViewInverse, offsetViewPos);
-        shadowPos = mul3(shadowModelView, shadowPos);
+        vOut.shadowPos = mul3(gbufferModelViewInverse, offsetViewPos);
+        vOut.shadowPos = mul3(shadowModelView, vOut.shadowPos);
+
+        vOut.shadowPos.z += SHADOW_OFFSET_BIAS;
 
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
@@ -73,9 +77,9 @@ void main() {
                 mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
             #endif
 
-            shadowPos = mul3(shadowProjectionFit, shadowPos);
+            vOut.shadowPos = mul3(shadowProjectionFit, vOut.shadowPos);
         #else
-            shadowPos = mul3(shadowProjection, shadowPos);
+            vOut.shadowPos = mul3(shadowProjection, vOut.shadowPos);
         #endif
 
         #if SHADOW_DISTORTION > 0
@@ -87,10 +91,10 @@ void main() {
                 #endif
             #endif
 
-            distort(shadowPos, shadowCameraOffset.xy);
+            distort(vOut.shadowPos, shadowCameraOffset.xy);
         #endif
 
-        shadowPos = shadowPos * 0.5 + 0.5;
+        vOut.shadowPos = vOut.shadowPos * 0.5 + 0.5;
     #endif
 
     #if DEBUG_VIEW == DEBUG_VIEW_BLOCK_ID
@@ -98,6 +102,6 @@ void main() {
         hsv.x = dhMaterialId / 15.0;
 
         vec3 color = HsvToRgb(hsv);
-        gcolor.rgb = linear_to_srgb(color);
+        vOut.color.rgb = linear_to_srgb(color);
     #endif
 }

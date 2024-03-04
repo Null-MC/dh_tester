@@ -3,15 +3,17 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-varying vec4 localPos;
-varying vec4 gcolor;
-varying vec2 lmcoord;
-varying vec3 viewNormal;
-flat varying int materialId;
+out VertexData {
+    vec4 color;
+    vec2 lmcoord;
+    vec3 localPos;
+    vec3 viewNormal;
+    flat int materialId;
 
-#ifdef SHADOWS_ENABLED
-    varying vec3 shadowPos;
-#endif
+    #ifdef SHADOWS_ENABLED
+        vec3 shadowPos;
+    #endif
+} vOut;
 
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
@@ -45,29 +47,33 @@ uniform vec3 cameraPosition;
 
 
 void main() {
-    viewNormal = mat3(gbufferModelView) * gl_Normal;
-    lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
-    materialId = dhMaterialId;
-    gcolor = gl_Color;
+    vOut.viewNormal = mat3(gbufferModelView) * gl_Normal;
+    vOut.lmcoord  = (gl_TextureMatrix[1] * gl_MultiTexCoord1).xy;
+    vOut.materialId = dhMaterialId;
+    vOut.color = gl_Color;
     
-    vec4 vPos = gl_Vertex;
+    vec3 vPos = gl_Vertex.xyz;
 
     vec3 cameraOffset = fract(cameraPosition);
-    vPos.xyz = floor(vPos.xyz + cameraOffset + 0.5) - cameraOffset;
+    vPos = floor(vPos + cameraOffset + 0.5) - cameraOffset;
 
     // Move down to match vanilla
-    bool isWater = (materialId == DH_BLOCK_WATER);
+    bool isWater = (vOut.materialId == DH_BLOCK_WATER);
     if (isWater) vPos.y -= (1.8/16.0);
 
-    vec4 viewPos = gl_ModelViewMatrix * vPos;
-    localPos = gbufferModelViewInverse * viewPos;
-    gl_Position = dhProjection * viewPos;
+    vec3 viewPos = mul3(gl_ModelViewMatrix, vPos);
+    vOut.localPos = mul3(gbufferModelViewInverse, viewPos);
+    gl_Position.xyz = mul3(dhProjection, viewPos);
+    gl_Position.w = 1.0;
 
     #ifdef SHADOWS_ENABLED
-        float viewDist = length(viewPos.xyz);
-        float shadowBias = SHADOW_NORMAL_BIAS * (viewDist + 8.0);
-        vec3 offsetViewPos = viewPos.xyz + viewNormal * shadowBias;
-        vec4 localPos = gbufferModelViewInverse * vec4(offsetViewPos, 1.0);
+        // float viewDist = length(viewPos);
+        vec3 offsetViewPos = viewPos.xyz + vOut.viewNormal * SHADOW_NORMAL_BIAS;
+
+        vOut.shadowPos = mul3(gbufferModelViewInverse, offsetViewPos);
+        vOut.shadowPos = mul3(shadowModelView, vOut.shadowPos);
+
+        vOut.shadowPos.z += SHADOW_OFFSET_BIAS;
 
         #ifdef SHADOW_FRUSTUM_FIT
             #ifndef IRIS_FEATURE_SSBO
@@ -76,9 +82,9 @@ void main() {
                 mat4 shadowProjectionFit = BuildOrthoProjectionMatrix(boundsMin, boundsMax);
             #endif
 
-            shadowPos = (shadowProjectionFit * (shadowModelView * localPos)).xyz;
+            vOut.shadowPos = mul3(shadowProjectionFit, vOut.shadowPos);
         #else
-            shadowPos = (shadowProjection * (shadowModelView * localPos)).xyz;
+            vOut.shadowPos = mul3(shadowProjection, vOut.shadowPos);
         #endif
 
         #if SHADOW_DISTORTION > 0
@@ -86,21 +92,21 @@ void main() {
                 vec3 shadowCameraOffset = vec3(0.0);
 
                 #ifdef SHADOW_FRUSTUM_FIT
-                    shadowCameraOffset = (shadowProjectionFit * vec4(vec3(0.0), 1.0)).xyz;
+                    shadowCameraOffset = shadowProjectionFit[3].xyz;
                 #endif
             #endif
 
-            distort(shadowPos, shadowCameraOffset.xy);
+            distort(vOut.shadowPos, shadowCameraOffset.xy);
         #endif
 
-        shadowPos = shadowPos * 0.5 + 0.5;
+        vOut.shadowPos = vOut.shadowPos * 0.5 + 0.5;
     #endif
 
     #if DEBUG_VIEW == DEBUG_VIEW_BLOCK_ID
         vec3 hsv = vec3(1.0);
-        hsv.x = materialId / 15.0;
+        hsv.x = vOut.materialId / 15.0;
 
         vec3 color = HsvToRgb(hsv);
-        gcolor.rgb = pow(color, vec3(1.0/2.2));
+        vOut.color.rgb = pow(color, vec3(1.0/2.2));
     #endif
 }

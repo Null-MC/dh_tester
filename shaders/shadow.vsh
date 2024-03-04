@@ -5,10 +5,12 @@
 
 in vec2 mc_Entity;
 
-varying vec2 texcoord;
-varying vec3 localPos;
-varying vec4 gcolor;
-flat varying uint blockId;
+out VertexData {
+    vec2 texcoord;
+    vec3 localPos;
+    vec4 color;
+    flat uint blockId;
+} vOut;
 
 uniform mat4 shadowModelViewInverse;
 
@@ -36,8 +38,12 @@ uniform mat4 shadowModelViewInverse;
 
 
 void main() {
+    vOut.texcoord  = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
+    vOut.blockId = uint(mc_Entity.x);
+    vOut.color = gl_Color;
+
     vec3 shadowViewPos = mul3(gl_ModelViewMatrix, gl_Vertex.xyz);
-    localPos = mul3(shadowModelViewInverse, shadowViewPos);
+    vOut.localPos = mul3(shadowModelViewInverse, shadowViewPos);
 
     #ifdef SHADOW_FRUSTUM_FIT
         #ifndef IRIS_FEATURE_SSBO
@@ -64,8 +70,4 @@ void main() {
 
         distort(gl_Position.xyz, shadowCameraOffset.xy);
     #endif
-
-    texcoord  = (gl_TextureMatrix[0] * gl_MultiTexCoord0).xy;
-    blockId = uint(mc_Entity.x);
-    gcolor = gl_Color;
 }

@@ -13,12 +13,13 @@ uniform float dhNearPlane;
 uniform float dhFarPlane;
 uniform float viewWidth;
 uniform float viewHeight;
+uniform float aspect;
 uniform float near;
 uniform float farPlane;
 
 
 float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) {
-    const vec3 g_sigma = vec3(1.6);
+    vec3 g_sigma = vec3(1.6 * aspect, 1.6, 0.01 * linearDepth);
     
     vec2 viewSize = vec2(viewWidth, viewHeight);
     vec2 pixelSize = 1.0 / viewSize;
@@ -33,12 +34,11 @@ float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) 
 
             vec2 sampleTex = texcoord + ivec2(ix, iy) * pixelSize;
             float sampleValue = textureLod(colortex1, sampleTex, 0).r;
-            ivec2 uv = ivec2(sampleTex * viewSize);
 
-            float depth = texelFetch(depthtex0, uv, 0).r;
+            float depth = textureLod(depthtex0, sampleTex, 0).r;
             float depthL = linearizeDepth(depth, near, farPlane);
             
-            float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+            float dhDepth = textureLod(dhDepthTex, sampleTex, 0).r;
             float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
             if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
@@ -62,12 +62,10 @@ float BilateralGaussianBlur(const in vec2 texcoord, const in float linearDepth) 
 
 /* RENDERTARGETS: 0 */
 void main() {
-    ivec2 uv = ivec2(gl_FragCoord.xy);
-
-    float depth = texelFetch(depthtex0, uv, 0).r;
+    float depth = textureLod(depthtex0, texcoord, 0).r;
     float depthL = linearizeDepth(depth, near, farPlane);
     
-    float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+    float dhDepth = textureLod(dhDepthTex, texcoord, 0).r;
     float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
     if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
@@ -81,7 +79,7 @@ void main() {
         #if SSAO_BLUR_RADIUS > 0
             gl_FragColor.a = BilateralGaussianBlur(texcoord, depthL);
         #else
-            gl_FragColor.a = texelFetch(colortex1, uv, 0).r;
+            gl_FragColor.a = textureLod(colortex1, texcoord, 0).r;
         #endif
     }
 }

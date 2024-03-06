@@ -42,8 +42,6 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
 
     vec2 viewSize = vec2(viewWidth, viewHeight);
 
-    //float biasFinal = min(gBias * viewDist, 1.0);
-
     float occlusion = 0.0;
     int sampleCount = 0;
     float radius = rStep;
@@ -61,13 +59,10 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
 
         if (sampleClipPos.xy != saturate(sampleClipPos.xy)) continue;
 
-
-        ivec2 uv = ivec2(sampleClipPos.xy * viewSize);
-
-        float depth = texelFetch(depthtex0, uv, 0).r;
+        float depth = textureLod(depthtex0, sampleClipPos.xy, 0).r;
         float depthL = linearizeDepth(depth, near, farPlane);
         
-        float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+        float dhDepth = textureLod(dhDepthTex, sampleClipPos.xy, 0).r;
         float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
         mat4 projectionInv = gbufferProjectionInverse;
@@ -76,7 +71,6 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
             depthL = dhDepthL;
             projectionInv = dhProjectionInverse;
         }
-
 
         if (depth >= 1.0) continue;
 
@@ -102,12 +96,10 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
 
 /* RENDERTARGETS: 1 */
 void main() {
-    ivec2 uv = ivec2(gl_FragCoord.xy);
-
-    float depth = texelFetch(depthtex0, uv, 0).r;
+    float depth = textureLod(depthtex0, texcoord, 0).r;
     float depthL = linearizeDepth(depth, near, farPlane);
     
-    float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+    float dhDepth = textureLod(dhDepthTex, texcoord, 0).r;
     float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
     mat4 projectionInv = gbufferProjectionInverse;

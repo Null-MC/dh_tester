@@ -42,6 +42,8 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
 
     vec2 viewSize = vec2(viewWidth, viewHeight);
 
+    //float biasFinal = min(gBias * viewDist, 1.0);
+
     float occlusion = 0.0;
     int sampleCount = 0;
     float radius = rStep;
@@ -76,7 +78,7 @@ float GetSpiralOcclusion(const in vec3 viewPos, const in vec3 viewNormal) {
         }
 
 
-        if (depth >= 1.0 - EPSILON) continue;
+        if (depth >= 1.0) continue;
 
         sampleClipPos.z = depth;
         sampleViewPos = unproject(projectionInv * vec4(sampleClipPos * 2.0 - 1.0, 1.0));

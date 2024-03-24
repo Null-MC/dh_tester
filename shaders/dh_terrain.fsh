@@ -50,7 +50,8 @@ void main() {
 
     // Distane-clip DH terrain  when it is closer than threshold
     float viewDist = length(vIn.localPos);
-    if (viewDist < dh_clipDistF * far) {discard; return;}
+    // if (viewDist < dh_clipDistF * far) {discard; return;}
+    if (viewDist < 0.5 * far) {discard; return;}
 
     vec3 _viewNormal = normalize(vIn.viewNormal);
     

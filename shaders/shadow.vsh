@@ -6,9 +6,10 @@
 in vec2 mc_Entity;
 
 out VertexData {
+    vec4 color;
     vec2 texcoord;
     vec3 localPos;
-    vec4 color;
+    
     flat uint blockId;
 } vOut;
 

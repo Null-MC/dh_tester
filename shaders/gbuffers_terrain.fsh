@@ -53,12 +53,10 @@ void main() {
     float viewDist = length(vIn.localPos);
     vec3 _viewNormal = normalize(vIn.viewNormal);
 
-    float transitionF = smoothstep(0.7 * far, far, viewDist);
-    float transitionF2 = transitionF*transitionF;
+    float transitionF = smoothstep(0.5 * far, far, viewDist);
 
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float lodGrad = textureQueryLod(gtexture, vIn.texcoord).x;
-        // float lodMinF = smoothstep(0.7 * far, far, viewDist);
         float lodFinal = max(lodGrad, LOD_Max * transitionF*transitionF);
 
         outFinal = textureLod(gtexture, vIn.texcoord, lodFinal);
@@ -74,13 +72,15 @@ void main() {
         outFinal = texture(gtexture, vIn.texcoord);
     #endif
 
-    float alpha = outFinal.a;
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float ditherOut = GetScreenBayerValue();
-        alpha *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
+
+        outFinal.a /= alphaTestRef;
+        outFinal.a *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
+        outFinal.a *= alphaTestRef;
     #endif
 
-    if (alpha < 0.1) {discard; return;}
+    if (outFinal.a < alphaTestRef) {discard; return;}
 
     outFinal *= vIn.color;
 

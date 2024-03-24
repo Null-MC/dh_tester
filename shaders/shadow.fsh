@@ -4,9 +4,9 @@
 #include "/lib/common.glsl"
 
 in VertexData {
+    vec4 color;
     vec2 texcoord;
     vec3 localPos;
-    vec4 color;
 
     flat uint blockId;
 } vIn;
@@ -25,19 +25,21 @@ void main() {
     bool isWater = (vIn.blockId == BLOCK_WATER);
 
     float viewDist = length(vIn.localPos);
-    if (isWater && viewDist > dh_clipDistF * far) {discard;}
+    if (isWater && viewDist > dh_clipDistF * far) {discard; return;}
 
     vec4 color = texture(gtexture, vIn.texcoord);
-    float alpha = color.a;
     
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
-        float transitionF = smoothstep(0.7 * far, far, viewDist);
+        float transitionF = smoothstep(0.5 * far, far, viewDist);
 
         float ditherOut = GetScreenBayerValue();
-        alpha *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
+
+        color.a /= alphaTestRef;
+        color.a *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
+        color.a *= alphaTestRef;
     #endif
 
-    if (alpha < 0.1) {discard; return;}
+    if (color.a < alphaTestRef) {discard; return;}
 
     outFinal = color * vIn.color;
 }

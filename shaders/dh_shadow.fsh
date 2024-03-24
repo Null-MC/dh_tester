@@ -16,7 +16,7 @@ layout(location = 0) out vec4 outFinal;
 
 void main() {
     float viewDist = length(vIn.localPos);
-    if (viewDist < dh_clipDistF * far) {discard;}
+    if (viewDist < dh_clipDistF * far) {discard; return;}
 
     outFinal = vIn.color;
 }

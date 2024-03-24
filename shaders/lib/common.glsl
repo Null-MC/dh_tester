@@ -26,6 +26,7 @@
 const float EPSILON = 1.e-6;
 const float PI = 3.1415926538;
 const float TAU = PI * 2.0;
+const int LOD_Max = 4;
 
 
 #define saturate(x) (clamp((x), 0.0, 1.0))

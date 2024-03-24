@@ -7,12 +7,15 @@ in VertexData {
     vec2 texcoord;
     vec3 localPos;
     vec4 color;
+
     flat uint blockId;
 } vIn;
 
 uniform sampler2D gtexture;
 
 uniform float far;
+
+#include "/lib/bayer.glsl"
 
 
 /* RENDERTARGETS: 0 */
@@ -25,7 +28,17 @@ void main() {
     if (isWater && viewDist > dh_clipDistF * far) {discard;}
 
     vec4 color = texture(gtexture, vIn.texcoord);
-    if (color.a < 0.1) {discard; return;}
+
+    float alpha = color.a;
+    #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
+        float transitionF = smoothstep(0.7 * far, far, viewDist);
+        float transitionF2 = transitionF*transitionF;
+    
+        float ditherOut = GetScreenBayerValue();
+        alpha *= mix(1.0, ditherOut, transitionF) * (1.0 - transitionF2);
+    #endif
+
+    if (alpha < 0.1) {discard; return;}
 
     outFinal = color * vIn.color;
 }

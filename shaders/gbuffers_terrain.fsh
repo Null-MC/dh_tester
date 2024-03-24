@@ -39,6 +39,7 @@ uniform float fogEnd;
 #include "/lib/fog.glsl"
 #include "/lib/sun.glsl"
 #include "/lib/lighting.glsl"
+#include "/lib/bayer.glsl"
 
 #if defined DISTANT_HORIZONS && defined DH_TEX_NOISE
     #include "/lib/tex_noise.glsl"
@@ -52,10 +53,13 @@ void main() {
     float viewDist = length(vIn.localPos);
     vec3 _viewNormal = normalize(vIn.viewNormal);
 
+    float transitionF = smoothstep(0.7 * far, far, viewDist);
+    float transitionF2 = transitionF*transitionF;
+
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float lodGrad = textureQueryLod(gtexture, vIn.texcoord).x;
-        float lodMinF = smoothstep(0.7 * far, far, viewDist);
-        float lodFinal = max(lodGrad, 4.0 * lodMinF);
+        // float lodMinF = smoothstep(0.7 * far, far, viewDist);
+        float lodFinal = max(lodGrad, LOD_Max * transitionF2);
 
         outFinal = textureLod(gtexture, vIn.texcoord, lodFinal);
 
@@ -70,7 +74,13 @@ void main() {
         outFinal = texture(gtexture, vIn.texcoord);
     #endif
 
-    if (outFinal.a < 0.1) {discard; return;}
+    float alpha = outFinal.a;
+    #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
+        float ditherOut = GetScreenBayerValue();
+        alpha *= mix(1.0, ditherOut, transitionF) * (1.0 - transitionF2);
+    #endif
+
+    if (alpha < 0.1) {discard; return;}
 
     outFinal *= vIn.color;
 

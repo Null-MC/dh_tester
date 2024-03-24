@@ -59,7 +59,7 @@ void main() {
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float lodGrad = textureQueryLod(gtexture, vIn.texcoord).x;
         // float lodMinF = smoothstep(0.7 * far, far, viewDist);
-        float lodFinal = max(lodGrad, LOD_Max * transitionF2);
+        float lodFinal = max(lodGrad, LOD_Max * transitionF*transitionF);
 
         outFinal = textureLod(gtexture, vIn.texcoord, lodFinal);
 
@@ -77,7 +77,7 @@ void main() {
     float alpha = outFinal.a;
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float ditherOut = GetScreenBayerValue();
-        alpha *= mix(1.0, ditherOut, transitionF) * (1.0 - transitionF2);
+        alpha *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
     #endif
 
     if (alpha < 0.1) {discard; return;}

@@ -28,14 +28,13 @@ void main() {
     if (isWater && viewDist > dh_clipDistF * far) {discard;}
 
     vec4 color = texture(gtexture, vIn.texcoord);
-
     float alpha = color.a;
+    
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
         float transitionF = smoothstep(0.7 * far, far, viewDist);
-        float transitionF2 = transitionF*transitionF;
-    
+
         float ditherOut = GetScreenBayerValue();
-        alpha *= mix(1.0, ditherOut, transitionF) * (1.0 - transitionF2);
+        alpha *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
     #endif
 
     if (alpha < 0.1) {discard; return;}

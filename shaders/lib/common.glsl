@@ -35,6 +35,8 @@ const int LOD_Max = 4;
 
 float maxOf(const in vec2 vec) {return max(vec[0], vec[1]);}
 
+float pow2(const in float value) {return value*value;}
+
 vec3 unproject(const in vec4 pos) {return pos.xyz / pos.w;}
 
 float gaussian(const in float sigma, const in float x) {

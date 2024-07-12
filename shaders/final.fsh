@@ -3,25 +3,30 @@
 #include "/lib/settings.glsl"
 #include "/lib/common.glsl"
 
-uniform sampler2D depthtex0;
-uniform sampler2D dhDepthTex;
 uniform sampler2D colortex0;
+
+#if DEBUG_VIEW != DEBUG_VIEW_NONE
+    uniform sampler2D depthtex0;
+    uniform sampler2D dhDepthTex;
+#endif
 
 #if DEBUG_VIEW == DEBUG_VIEW_SHADOWS
     uniform sampler2D shadowcolor0;
 #endif
 
-uniform mat4 gbufferProjectionInverse;
-uniform mat4 dhProjectionInverse;
-uniform float dhNearPlane;
-uniform float dhFarPlane;
-uniform float viewWidth;
-uniform float viewHeight;
-uniform float near;
-uniform float far;
-uniform float farPlane;
+#if DEBUG_VIEW != DEBUG_VIEW_NONE
+    uniform mat4 gbufferProjectionInverse;
+    uniform mat4 dhProjectionInverse;
+    uniform float dhNearPlane;
+    uniform float dhFarPlane;
+    uniform float near;
+    uniform float far;
+    uniform float farPlane;
+    uniform float viewWidth;
+    uniform float viewHeight;
+#endif
 
-#if defined SHADOW_FRUSTUM_FIT && defined SHADOWS_ENABLED
+#if defined SHADOW_FRUSTUM_FIT && defined SHADOWS_ENABLED && DEBUG_VIEW == DEBUG_VIEW_SHADOWS
     uniform float aspectRatio;
 
     #ifdef IRIS_FEATURE_SSBO
@@ -33,22 +38,27 @@ uniform float farPlane;
     #endif
 #endif
 
-#if defined SHADOW_FRUSTUM_FIT && defined SHADOWS_ENABLED
+#if defined SHADOW_FRUSTUM_FIT && defined SHADOWS_ENABLED && DEBUG_VIEW == DEBUG_VIEW_SHADOWS
     #ifdef IRIS_FEATURE_SSBO
         #include "/lib/shadow_ssbo.glsl"
     #else
         #include "/lib/shadow_matrix.glsl"
     #endif
 
-    #include "/lib/text.glsl"
+    #if defined SHADOW_DEBUG && defined IRIS_FEATURE_SSBO
+        #include "/lib/text.glsl"
+    #endif
 #endif
 
 
 /* RENDERTARGETS: 0 */
 void main() {
     ivec2 uv = ivec2(gl_FragCoord.xy);
-    vec2 viewSize = vec2(viewWidth, viewHeight);
-    vec2 texcoord = gl_FragCoord.xy / viewSize;
+
+    #if DEBUG_VIEW != DEBUG_VIEW_NONE
+        vec2 viewSize = vec2(viewWidth, viewHeight);
+        vec2 texcoord = gl_FragCoord.xy / viewSize;
+    #endif
 
     #if DEBUG_VIEW == DEBUG_VIEW_VIEW_POS
         float depth = texelFetch(depthtex0, uv, 0).r;

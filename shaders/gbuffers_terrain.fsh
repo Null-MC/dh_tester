@@ -73,11 +73,13 @@ void main() {
     #endif
 
     #if defined DISTANT_HORIZONS && defined DH_LOD_FADE
-        float ditherOut = GetScreenBayerValue();
+        if (vIn.blockId == BLOCK_PLANT) {
+            float ditherOut = GetScreenBayerValue();
 
-        outFinal.a /= alphaTestRef;
-        outFinal.a *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
-        outFinal.a *= alphaTestRef;
+            outFinal.a /= alphaTestRef;
+            outFinal.a *= mix(1.0, ditherOut, transitionF) * pow2(1.0 - transitionF);
+            outFinal.a *= alphaTestRef;
+        }
     #endif
 
     if (outFinal.a < alphaTestRef) {discard; return;}

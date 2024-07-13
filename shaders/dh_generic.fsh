@@ -58,9 +58,11 @@ void main() {
         vec3 localNormal = mat3(gbufferModelViewInverse) * _viewNormal;
         outFinal.rgb = normalize(localNormal) * 0.5 + 0.5;
         outFinal.rgb = linear_to_srgb(outFinal.rgb);
+        outFinal.a = 1.0;
     #elif DEBUG_VIEW == DEBUG_VIEW_LIGHT_COORD
         outFinal.rgb = vec3(vIn.lmcoord, 0.0);
         outFinal.rgb = linear_to_srgb(outFinal.rgb);
+        outFinal.a = 1.0;
     // #elif DEBUG_VIEW != DEBUG_VIEW_BLOCK_ID
     #else
         // #ifdef DH_TEX_NOISE

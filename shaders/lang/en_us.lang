@@ -3,9 +3,10 @@ value.DEBUG_VIEW.0=None
 value.DEBUG_VIEW.1=World Normal
 value.DEBUG_VIEW.2=LightMap Coord
 value.DEBUG_VIEW.3=View-Space Position
-value.DEBUG_VIEW.4=Linear Depth
-value.DEBUG_VIEW.5=Block ID
-value.DEBUG_VIEW.6=Shadow Color
+value.DEBUG_VIEW.4=Linear Depth Opaque
+value.DEBUG_VIEW.5=Linear Depth Translucent
+value.DEBUG_VIEW.6=Block ID
+value.DEBUG_VIEW.7=Shadow Color
 
 option.DH_TEX_NOISE=DH Texture Noise
 option.DH_TEX_NOISE.comment=Adds noise to the DH chunks to make them appear textured/less flat.

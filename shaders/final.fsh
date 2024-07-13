@@ -7,7 +7,12 @@ uniform sampler2D colortex0;
 
 #if DEBUG_VIEW != DEBUG_VIEW_NONE
     uniform sampler2D depthtex0;
-    uniform sampler2D dhDepthTex;
+    uniform sampler2D dhDepthTex0;
+#endif
+
+#if DEBUG_VIEW == DEBUG_VIEW_DEPTH_OPAQUE
+    uniform sampler2D depthtex1;
+    uniform sampler2D dhDepthTex1;
 #endif
 
 #if DEBUG_VIEW == DEBUG_VIEW_SHADOWS
@@ -65,7 +70,7 @@ void main() {
         float depthL = linearizeDepth(depth, near, farPlane);
         vec4 viewPos = vec4(0.0);
 
-        float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+        float dhDepth = texelFetch(dhDepthTex0, uv, 0).r;
         float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
         mat4 projectionInv = gbufferProjectionInverse;
@@ -82,11 +87,26 @@ void main() {
 
         gl_FragColor = vec4(viewPos.xyz * 0.001, 1.0);
         gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
-    #elif DEBUG_VIEW == DEBUG_VIEW_DEPTH_LINEAR
+    #elif DEBUG_VIEW == DEBUG_VIEW_DEPTH_OPAQUE
+        float depth = texelFetch(depthtex1, uv, 0).r;
+        float depthL = linearizeDepth(depth, near, farPlane);
+        
+        float dhDepth = texelFetch(dhDepthTex1, uv, 0).r;
+        float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
+
+        if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
+            // depth = dhDepth;
+            depthL = dhDepthL;
+        }
+
+        depthL /= 0.5*dhFarPlane;
+        gl_FragColor = vec4(vec3(depthL), 1.0);
+        gl_FragColor.rgb = linear_to_srgb(gl_FragColor.rgb);
+    #elif DEBUG_VIEW == DEBUG_VIEW_DEPTH_TRANSLUCENT
         float depth = texelFetch(depthtex0, uv, 0).r;
         float depthL = linearizeDepth(depth, near, farPlane);
         
-        float dhDepth = texelFetch(dhDepthTex, uv, 0).r;
+        float dhDepth = texelFetch(dhDepthTex0, uv, 0).r;
         float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
 
         if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {

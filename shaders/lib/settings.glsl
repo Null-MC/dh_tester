@@ -1,4 +1,4 @@
-#define DEBUG_VIEW 0 // [0 1 2 3 4 5 6]
+#define DEBUG_VIEW 0 // [0 1 2 3 4 5 6 7]
 #define DH_CLIP_DIST 80 // [0 10 20 30 40 50 60 70 80 90 100]
 #define DH_TEX_NOISE
 #define DH_LOD_FADE

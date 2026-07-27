@@ -83,6 +83,7 @@ void main() {
         // outFinal.rgb *= GetDiffuseLighting(vIn.lmcoord, shadowF, NoLm);
 
         #ifndef SSAO_ENABLED
+            float viewDist = length(vIn.localPos);
             float fogF = GetFogFactor(viewDist);
             outFinal.rgb = mix(outFinal.rgb, fogColor, fogF);
         #endif

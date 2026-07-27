@@ -22,10 +22,12 @@ uniform float far;
 layout(location = 0) out vec4 outFinal;
 
 void main() {
-    bool isWater = (vIn.blockId == BLOCK_WATER);
-
     float viewDist = length(vIn.localPos);
-    if (isWater && viewDist > dh_clipDistF * far) {discard; return;}
+
+    #ifdef DISTANT_HORIZONS
+        bool isWater = (vIn.blockId == BLOCK_WATER);
+        if (isWater && viewDist > dh_clipDistF * far) {discard; return;}
+    #endif
 
     vec4 color = texture(gtexture, vIn.texcoord);
     
